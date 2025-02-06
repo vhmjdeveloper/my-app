@@ -90,11 +90,25 @@ export function BlockEditor() {
   }
 
   const [lastEnterPress, setLastEnterPress] = useState<{ blockId: string; timestamp: number } | null>(null)
+    const navigateBlocks = (currentBlockId: string, direction: 'up' | 'down') => {
+        const currentIndex = blocks.findIndex(b => b.id === currentBlockId);
+        if (currentIndex === -1) return;
 
+        const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+        if (newIndex >= 0 && newIndex < blocks.length) {
+            setFocusedBlockId(blocks[newIndex].id);
+        }
+    };
   const handleKeyDown = (e: React.KeyboardEvent, blockId: string) => {
     const block = blocks.find((b) => b.id === blockId)
     if (!block) return
-
+// Manejo de flechas arriba/abajo
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      const direction = e.key === 'ArrowUp' ? 'up' : 'down';
+      navigateBlocks(blockId, direction);
+      return;
+    }
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
 
