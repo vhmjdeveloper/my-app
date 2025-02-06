@@ -10,8 +10,10 @@ interface CommandPaletteProps {
   onSelect: (type: string) => void
   position: { top: number; left: number }
 }
+
 const COMMAND_PALETTE_HEIGHT = 300 // altura máxima del menú
 const OFFSET_FROM_CURSOR = 24 // espacio entre el cursor y el menú
+
 const BLOCK_TYPES = [
   {
     id: "text",
@@ -71,40 +73,46 @@ const BLOCK_TYPES = [
 
 export function CommandPalette({ isOpen, onClose, onSelect, position }: CommandPaletteProps) {
   const [search, setSearch] = useState("")
-  const ref = useRef<HTMLDivElement>(null)
   const [finalPosition, setFinalPosition] = useState({ top: 0, left: 0 })
+  const containerRef = useRef<HTMLDivElement>(null)
+  const commandRef = useRef<HTMLDivElement>(null)
+
+  // Manejar el enfoque y la posición cuando se abre
   useEffect(() => {
     if (isOpen) {
       setSearch("")
+      // Forzar el enfoque en el comando después del renderizado
+      requestAnimationFrame(() => {
+        const commandElement = commandRef.current?.querySelector('input')
+        if (commandElement) {
+          commandElement.focus()
+        }
+      })
 
-      // Calcular espacio disponible arriba y abajo del cursor
+      // Calcular la posición
       const windowHeight = window.innerHeight
       const spaceBelow = windowHeight - position.top
-
-      // Determinar si el menú debe aparecer arriba o abajo del cursor
       const shouldShowAbove = spaceBelow < (COMMAND_PALETTE_HEIGHT + OFFSET_FROM_CURSOR)
 
-      // Calcular la posición final
       const top = shouldShowAbove
-          ? Math.max(0, position.top - COMMAND_PALETTE_HEIGHT - 10) // 10px de espacio adicional
+          ? Math.max(0, position.top - COMMAND_PALETTE_HEIGHT - 10)
           : Math.min(position.top + OFFSET_FROM_CURSOR, windowHeight - COMMAND_PALETTE_HEIGHT)
 
-      // Asegurar que el menú no se salga por la izquierda
-      const left = Math.min(position.left, window.innerWidth - 288) // 288px es el ancho del menú (w-72)
-
+      const left = Math.min(position.left, window.innerWidth - 288)
       setFinalPosition({ top, left })
     }
   }, [isOpen, position])
 
+  // Manejar clics fuera del componente y teclas de escape
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         onClose()
       }
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" || event.key === "Enter") {
+      if (event.key === "Escape") {
         onClose()
       }
     }
@@ -124,12 +132,13 @@ export function CommandPalette({ isOpen, onClose, onSelect, position }: CommandP
 
   return (
       <div
-          ref={ref}
+          ref={containerRef}
           className="fixed z-50 w-72 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"
           style={{ top: finalPosition.top, left: finalPosition.left }}
       >
-        <Command className="w-full">
+        <Command ref={commandRef} className="w-full" shouldFilter={true}>
           <Command.Input
+              autoFocus
               value={search}
               onValueChange={setSearch}
               placeholder="Escribe para filtrar..."
@@ -150,7 +159,9 @@ export function CommandPalette({ isOpen, onClose, onSelect, position }: CommandP
                     <type.icon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                     <div>
                       <div className="font-medium dark:text-white">{type.name}</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">{type.description}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {type.description}
+                      </div>
                     </div>
                   </Command.Item>
               ))}
@@ -160,4 +171,3 @@ export function CommandPalette({ isOpen, onClose, onSelect, position }: CommandP
       </div>
   )
 }
-
