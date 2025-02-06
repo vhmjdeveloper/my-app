@@ -1,6 +1,5 @@
-"use client"
-
-import { useState, useCallback, useRef, useEffect, forwardRef } from "react"
+import React, { useState, useCallback, useRef, useEffect, forwardRef } from "react"
+import ImageUpload from "../image-upload"
 
 interface ImageBlockProps {
     id: string
@@ -17,6 +16,7 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
         const [isEditing, setIsEditing] = useState(false)
         const [imageUrl, setImageUrl] = useState(content)
         const [caption, setCaption] = useState("")
+        const [error, setError] = useState<string | null>(null)
         const captionRef = useRef<HTMLTextAreaElement>(null)
         const containerRef = useRef<HTMLDivElement>(null)
 
@@ -27,28 +27,30 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
             }
         }, [caption])
 
-        const handleFileChange = useCallback(
-            (event: React.ChangeEvent<HTMLInputElement>) => {
-                const file = event.target.files?.[0]
+        const handleImageSelect = useCallback(
+            (file: File | null, imageUrl?: string) => {
                 if (file) {
                     const reader = new FileReader()
                     reader.onloadend = () => {
                         setImageUrl(reader.result as string)
                         onChange(reader.result as string)
+                        setIsEditing(false)
+                        setError(null)
                     }
                     reader.readAsDataURL(file)
+                } else if (imageUrl) {
+                    setImageUrl(imageUrl)
+                    onChange(imageUrl)
+                    setIsEditing(false)
+                    setError(null)
                 }
             },
-            [onChange],
+            [onChange]
         )
 
-        const handleUrlChange = useCallback(
-            (event: React.ChangeEvent<HTMLInputElement>) => {
-                setImageUrl(event.target.value)
-                onChange(event.target.value)
-            },
-            [onChange],
-        )
+        const handleImageError = useCallback((errorMessage: string) => {
+            setError(errorMessage)
+        }, [])
 
         const handleCaptionChange = useCallback((event: React.ChangeEvent<HTMLTextAreaElement>) => {
             setCaption(event.target.value)
@@ -79,26 +81,15 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
                 onKeyDown={onKeyDown}
             >
                 {isEditing ? (
-                    <div className="space-y-2">
-                        <input
-                            type="text"
-                            className="w-full p-2 border rounded dark:bg-gray-800 dark:text-white"
-                            value={imageUrl}
-                            onChange={handleUrlChange}
-                            placeholder="Ingresa la URL de la imagen"
+                    <div className="space-y-4">
+                        <ImageUpload
+                            onImageSelect={handleImageSelect}
+                            onImageError={handleImageError}
+                            maxSize={5}
                         />
-                        <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleFileChange}
-                            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                        />
-                        <button
-                            onClick={() => setIsEditing(false)}
-                            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                        >
-                            Guardar
-                        </button>
+                        {error && (
+                            <div className="text-red-500 text-sm mt-2">{error}</div>
+                        )}
                     </div>
                 ) : (
                     <>
@@ -106,7 +97,7 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
                             <>
                                 <img
                                     src={imageUrl}
-                                    alt="Contenido subido por el usuario"
+                                    alt={caption || "Contenido subido por el usuario"}
                                     className="max-w-full h-auto rounded-lg shadow-md"
                                 />
                                 <button
