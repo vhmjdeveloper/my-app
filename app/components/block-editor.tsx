@@ -44,14 +44,20 @@ export function BlockEditor() {
   const blockRefs = useRef<{ [key: string]: HTMLElement | null }>({})
 
   useEffect(() => {
+    // Solo ejecutar en el cliente
+    if (typeof window === 'undefined') return;
+
     if (focusedBlockId) {
       const element = blockRefs.current[focusedBlockId]
       if (element) {
-        element.focus()
-        if ("setSelectionRange" in element) {
-          const len = (element as HTMLInputElement).value.length
-          ;(element as HTMLInputElement).setSelectionRange(len, len)
-        }
+        // Usar setTimeout para asegurar que el DOM está listo
+        setTimeout(() => {
+          element.focus()
+          if ("setSelectionRange" in element) {
+            const len = (element as HTMLInputElement).value.length
+            ;(element as HTMLInputElement).setSelectionRange(len, len)
+          }
+        }, 0)
       }
     }
   }, [focusedBlockId])

@@ -88,9 +88,10 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
             const containerWidth = containerRef.current?.offsetWidth || 100
             const newWidth = (ref.offsetWidth / containerWidth) * 100
 
+            // Ensure width stays between 20% and 200%
             const newImageData = {
                 ...imageData,
-                width: Math.min(Math.max(newWidth, 20), 100)
+                width: Math.min(Math.max(newWidth, 20), 200)
             }
 
             setImageData(newImageData)
@@ -133,25 +134,32 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
                 ) : (
                     <>
                         {imageData.url ? (
-                            <div className="relative">
+                            <div className="relative w-full">
                                 <Resizable
                                     size={{
                                         width: `${imageData.width}%`,
                                         height: 'auto'
                                     }}
-                                    maxWidth="100%"
+                                    maxWidth="200%"
                                     minWidth="20%"
+                                    scale={1}
+                                    onResize={handleResize}
                                     enable={{
                                         top: false,
                                         right: true,
                                         bottom: false,
-                                        left: false,
+                                        left: true,
                                         topRight: false,
                                         bottomRight: false,
                                         bottomLeft: false,
                                         topLeft: false
                                     }}
                                     handleStyles={{
+                                        left: {
+                                            left: '-3px',
+                                            width: '6px',
+                                            cursor: 'ew-resize'
+                                        },
                                         right: {
                                             right: '-3px',
                                             width: '6px',
@@ -159,18 +167,22 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
                                         }
                                     }}
                                     handleComponent={{
+                                        left: (
+                                            <div className="absolute inset-y-0 left-0 w-6 group-hover:bg-blue-500/10 transition-colors">
+                                                <div className="absolute left-2 top-1/2 -translate-y-1/2 w-0.5 h-12 bg-blue-500 rounded-full opacity-0 group-hover:opacity-75 transition-opacity" />
+                                            </div>
+                                        ),
                                         right: (
                                             <div className="absolute inset-y-0 right-0 w-6 group-hover:bg-blue-500/10 transition-colors">
                                                 <div className="absolute right-2 top-1/2 -translate-y-1/2 w-0.5 h-12 bg-blue-500 rounded-full opacity-0 group-hover:opacity-75 transition-opacity" />
                                             </div>
                                         )
                                     }}
-                                    onResize={handleResize}
                                 >
                                     <img
                                         src={imageData.url}
                                         alt={caption || "Contenido subido por el usuario"}
-                                        className="max-w-full h-auto rounded-lg shadow-md"
+                                        className="w-full h-auto rounded-lg shadow-md object-contain"
                                         draggable={false}
                                     />
                                 </Resizable>
