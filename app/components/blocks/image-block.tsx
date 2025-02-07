@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect, forwardRef } from "react"
+import { Resizable } from "re-resizable"
 import ImageUpload from "../image-upload"
 
 interface ImageBlockProps {
@@ -11,36 +12,54 @@ interface ImageBlockProps {
     ref?: React.Ref<HTMLDivElement>
 }
 
+interface ImageData {
+    url: string
+    width: number
+}
+
+const parseImageContent = (content: string): ImageData => {
+    try {
+        return JSON.parse(content)
+    } catch {
+        return { url: content, width: 100 }
+    }
+}
+
+const serializeImageContent = (data: ImageData): string => {
+    return JSON.stringify(data)
+}
+
 export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
     ({ id, content, onChange, onKeyDown, onAddBlockAfter, onFocus }, ref) => {
         const [isEditing, setIsEditing] = useState(false)
-        const [imageUrl, setImageUrl] = useState(content)
+        const [imageData, setImageData] = useState<ImageData>(() => parseImageContent(content))
         const [caption, setCaption] = useState("")
         const [error, setError] = useState<string | null>(null)
         const captionRef = useRef<HTMLTextAreaElement>(null)
         const containerRef = useRef<HTMLDivElement>(null)
-
-        useEffect(() => {
-            if (captionRef.current) {
-                captionRef.current.style.height = "auto"
-                captionRef.current.style.height = captionRef.current.scrollHeight + "px"
-            }
-        }, [caption])
 
         const handleImageSelect = useCallback(
             (file: File | null, imageUrl?: string) => {
                 if (file) {
                     const reader = new FileReader()
                     reader.onloadend = () => {
-                        setImageUrl(reader.result as string)
-                        onChange(reader.result as string)
+                        const newImageData = {
+                            url: reader.result as string,
+                            width: 100
+                        }
+                        setImageData(newImageData)
+                        onChange(serializeImageContent(newImageData))
                         setIsEditing(false)
                         setError(null)
                     }
                     reader.readAsDataURL(file)
                 } else if (imageUrl) {
-                    setImageUrl(imageUrl)
-                    onChange(imageUrl)
+                    const newImageData = {
+                        url: imageUrl,
+                        width: 100
+                    }
+                    setImageData(newImageData)
+                    onChange(serializeImageContent(newImageData))
                     setIsEditing(false)
                     setError(null)
                 }
@@ -64,6 +83,26 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
                 onKeyDown(e)
             }
         }
+
+        const handleResize = useCallback((e: MouseEvent | TouchEvent, direction: string, ref: HTMLElement) => {
+            const containerWidth = containerRef.current?.offsetWidth || 100
+            const newWidth = (ref.offsetWidth / containerWidth) * 100
+
+            const newImageData = {
+                ...imageData,
+                width: Math.min(Math.max(newWidth, 20), 100)
+            }
+
+            setImageData(newImageData)
+            onChange(serializeImageContent(newImageData))
+        }, [imageData, onChange])
+
+        useEffect(() => {
+            if (captionRef.current) {
+                captionRef.current.style.height = "auto"
+                captionRef.current.style.height = captionRef.current.scrollHeight + "px"
+            }
+        }, [caption])
 
         return (
             <div
@@ -93,20 +132,49 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
                     </div>
                 ) : (
                     <>
-                        {imageUrl ? (
-                            <>
-                                <img
-                                    src={imageUrl}
-                                    alt={caption || "Contenido subido por el usuario"}
-                                    className="max-w-full h-auto rounded-lg shadow-md"
-                                />
-                                <button
-                                    onClick={() => setIsEditing(true)}
-                                    className="absolute top-2 right-2 px-2 py-1 bg-white bg-opacity-70 rounded text-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                        {imageData.url ? (
+                            <div className="relative">
+                                <Resizable
+                                    size={{
+                                        width: `${imageData.width}%`,
+                                        height: 'auto'
+                                    }}
+                                    maxWidth="100%"
+                                    minWidth="20%"
+                                    enable={{
+                                        top: false,
+                                        right: true,
+                                        bottom: false,
+                                        left: false,
+                                        topRight: false,
+                                        bottomRight: false,
+                                        bottomLeft: false,
+                                        topLeft: false
+                                    }}
+                                    handleStyles={{
+                                        right: {
+                                            right: '-3px',
+                                            width: '6px',
+                                            cursor: 'ew-resize'
+                                        }
+                                    }}
+                                    handleComponent={{
+                                        right: (
+                                            <div className="absolute inset-y-0 right-0 w-6 group-hover:bg-blue-500/10 transition-colors">
+                                                <div className="absolute right-2 top-1/2 -translate-y-1/2 w-0.5 h-12 bg-blue-500 rounded-full opacity-0 group-hover:opacity-75 transition-opacity" />
+                                            </div>
+                                        )
+                                    }}
+                                    onResize={handleResize}
                                 >
-                                    Editar
-                                </button>
-                            </>
+                                    <img
+                                        src={imageData.url}
+                                        alt={caption || "Contenido subido por el usuario"}
+                                        className="max-w-full h-auto rounded-lg shadow-md"
+                                        draggable={false}
+                                    />
+                                </Resizable>
+                            </div>
                         ) : (
                             <div
                                 className="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center cursor-pointer hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
