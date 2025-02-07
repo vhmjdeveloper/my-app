@@ -1,6 +1,13 @@
-import React, { useState, useCallback, useRef, useEffect, forwardRef } from "react"
 import { Resizable } from "re-resizable"
 import ImageUpload from "../image-upload"
+import { Type, MoreHorizontal } from "lucide-react"
+import { forwardRef, useRef, useState, useCallback, useEffect } from "react"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface ImageBlockProps {
     id: string
@@ -15,13 +22,19 @@ interface ImageBlockProps {
 interface ImageData {
     url: string
     width: number
+    caption?: string
+    showCaption?: boolean
 }
 
 const parseImageContent = (content: string): ImageData => {
     try {
-        return JSON.parse(content)
+        const parsed = JSON.parse(content)
+        return {
+            ...parsed,
+            showCaption: parsed.showCaption ?? false
+        }
     } catch {
-        return { url: content, width: 100 }
+        return { url: content, width: 100, showCaption: false }
     }
 }
 
@@ -32,8 +45,14 @@ const serializeImageContent = (data: ImageData): string => {
 export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
     ({ id, content, onChange, onKeyDown, onAddBlockAfter, onFocus }, ref) => {
         const [isEditing, setIsEditing] = useState(false)
-        const [imageData, setImageData] = useState<ImageData>(() => parseImageContent(content))
-        const [caption, setCaption] = useState("")
+        const [imageData, setImageData] = useState<ImageData>(() => {
+            const parsed = parseImageContent(content)
+            return {
+                ...parsed,
+                showCaption: parsed.showCaption ?? false
+            }
+        })
+        const [isSmallImage, setIsSmallImage] = useState(false)
         const [error, setError] = useState<string | null>(null)
         const captionRef = useRef<HTMLTextAreaElement>(null)
         const containerRef = useRef<HTMLDivElement>(null)
@@ -44,6 +63,7 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
                     const reader = new FileReader()
                     reader.onloadend = () => {
                         const newImageData = {
+                            ...imageData,
                             url: reader.result as string,
                             width: 100
                         }
@@ -55,6 +75,7 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
                     reader.readAsDataURL(file)
                 } else if (imageUrl) {
                     const newImageData = {
+                        ...imageData,
                         url: imageUrl,
                         width: 100
                     }
@@ -64,7 +85,7 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
                     setError(null)
                 }
             },
-            [onChange]
+            [imageData, onChange]
         )
 
         const handleImageError = useCallback((errorMessage: string) => {
@@ -72,8 +93,24 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
         }, [])
 
         const handleCaptionChange = useCallback((event: React.ChangeEvent<HTMLTextAreaElement>) => {
-            setCaption(event.target.value)
-        }, [])
+            const newCaption = event.target.value
+            const newImageData = {
+                ...imageData,
+                caption: newCaption
+            }
+            setImageData(newImageData)
+            onChange(serializeImageContent(newImageData))
+        }, [imageData, onChange])
+
+        const handleCaptionVisibility = useCallback(() => {
+            const newImageData = {
+                ...imageData,
+                showCaption: !imageData.showCaption,
+                caption: !imageData.showCaption ? (imageData.caption || "") : imageData.caption
+            }
+            setImageData(newImageData)
+            onChange(serializeImageContent(newImageData))
+        }, [imageData, onChange])
 
         const handleCaptionKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
             if (e.key === "Enter" && !e.shiftKey) {
@@ -87,15 +124,16 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
         const handleResize = useCallback((e: MouseEvent | TouchEvent, direction: string, ref: HTMLElement) => {
             const containerWidth = containerRef.current?.offsetWidth || 100
             const newWidth = (ref.offsetWidth / containerWidth) * 100
-
-            // Ensure width stays between 20% and 200%
             const newImageData = {
                 ...imageData,
                 width: Math.min(Math.max(newWidth, 20), 200)
             }
-
             setImageData(newImageData)
             onChange(serializeImageContent(newImageData))
+
+            // Verificar el tamaño después del redimensionado
+            const currentWidth = ref.offsetWidth
+            setIsSmallImage(currentWidth < 400)
         }, [imageData, onChange])
 
         useEffect(() => {
@@ -103,7 +141,73 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
                 captionRef.current.style.height = "auto"
                 captionRef.current.style.height = captionRef.current.scrollHeight + "px"
             }
-        }, [caption])
+        }, [imageData.caption])
+
+        useEffect(() => {
+            const checkImageSize = () => {
+                if (containerRef.current) {
+                    const containerWidth = containerRef.current.offsetWidth
+                    const imageWidth = containerWidth * (imageData.width / 100)
+                    setIsSmallImage(imageWidth < 400)
+                }
+            }
+
+            // Verificar el tamaño inmediatamente
+            checkImageSize()
+
+            // Verificar en cada cambio de ventana
+            window.addEventListener('resize', checkImageSize)
+
+            // Crear un ResizeObserver para detectar cambios en el contenedor
+            const observer = new ResizeObserver(checkImageSize)
+            if (containerRef.current) {
+                observer.observe(containerRef.current)
+            }
+
+            return () => {
+                window.removeEventListener('resize', checkImageSize)
+                observer.disconnect()
+            }
+        }, [imageData.width])
+
+        // Actualizar el estado local cuando cambia el contenido externo
+        useEffect(() => {
+            const parsedContent = parseImageContent(content)
+            if (JSON.stringify(parsedContent) !== JSON.stringify(imageData)) {
+                setImageData(parsedContent)
+            }
+        }, [content])
+
+        const ImageMenu = () => (
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    {isSmallImage ? (
+                        <button
+                            className="p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-md shadow-lg hover:bg-white dark:hover:bg-gray-800 transition-colors"
+                            aria-label="Opciones de imagen"
+                        >
+                            <MoreHorizontal size={16} className="text-gray-700 dark:text-gray-300" />
+                        </button>
+                    ) : (
+                        <button className="flex items-center gap-2 px-3 py-1.5 text-sm bg-white/90 dark:bg-gray-800/90 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800 rounded-md shadow-lg transition-colors">
+                            <span>Opciones de imagen</span>
+                        </button>
+                    )}
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                    align="end"
+                    className="w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
+                >
+                    <DropdownMenuItem
+                        onClick={handleCaptionVisibility}
+                        className="flex items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                        <Type className="mr-2 h-4 w-4" />
+                        <span>{imageData.showCaption ? "Quitar pie de foto" : "Agregar pie de foto"}</span>
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        )
 
         return (
             <div
@@ -179,13 +283,30 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
                                         )
                                     }}
                                 >
-                                    <img
-                                        src={imageData.url}
-                                        alt={caption || "Contenido subido por el usuario"}
-                                        className="w-full h-auto rounded-lg shadow-md object-contain"
-                                        draggable={false}
-                                    />
+                                    <div className="relative group/image">
+                                        <img
+                                            src={imageData.url}
+                                            alt={imageData.caption || "Contenido subido por el usuario"}
+                                            className="w-full h-auto rounded-lg shadow-md object-contain cursor-default"
+                                            draggable={false}
+                                        />
+                                        <div className="absolute top-2 right-2 z-20 opacity-0 group-hover/image:opacity-100 transition-opacity">
+                                            <ImageMenu />
+                                        </div>
+                                    </div>
                                 </Resizable>
+                                {imageData.showCaption && (
+                                    <textarea
+                                        id={`${id}-caption`}
+                                        ref={captionRef}
+                                        value={imageData.caption || ""}
+                                        onChange={handleCaptionChange}
+                                        onKeyDown={handleCaptionKeyDown}
+                                        placeholder="Escribe un pie de foto o presiona Enter para agregar un nuevo bloque..."
+                                        className="w-full mt-2 p-2 text-sm text-gray-700 dark:text-gray-300 bg-transparent border-none focus:outline-none focus:ring-0 resize-none overflow-hidden"
+                                        rows={1}
+                                    />
+                                )}
                             </div>
                         ) : (
                             <div
@@ -197,16 +318,6 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
                         )}
                     </>
                 )}
-                <textarea
-                    id={`${id}-caption`}
-                    ref={captionRef}
-                    value={caption}
-                    onChange={handleCaptionChange}
-                    onKeyDown={handleCaptionKeyDown}
-                    placeholder="Escribe un pie de foto o presiona Enter para agregar un nuevo bloque..."
-                    className="w-full mt-2 p-2 text-sm text-gray-700 dark:text-gray-300 bg-transparent border-none focus:outline-none focus:ring-0 resize-none overflow-hidden"
-                    rows={1}
-                />
             </div>
         )
     }
