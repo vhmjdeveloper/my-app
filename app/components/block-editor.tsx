@@ -252,6 +252,7 @@ export function BlockEditor() {
       ref: (el: HTMLElement | null) => (blockRefs.current[block.id] = el),
       onFocus: () => setFocusedBlockId(block.id),
       onAddBlockAfter: () => createNewBlock(block.id, "text", false),
+      onDelete: () => handleBlockDelete(block.id),
       ...block.props,
     }
 
@@ -291,7 +292,13 @@ export function BlockEditor() {
           </div>
       )
     }
-
+    const handleBlockDelete = (blockId: string) => {
+      setBlocks(blocks.filter(b => b.id !== blockId))
+      setSelectedBlockIds(selectedBlockIds.filter(id => id !== blockId))
+      if (focusedBlockId === blockId) {
+        setFocusedBlockId(null)
+      }
+    }
     const isSelected = selectedBlockIds.includes(block.id)
 
     return (

@@ -1,6 +1,6 @@
 import { Resizable } from "re-resizable"
 import ImageUpload from "../image-upload"
-import { Type, MoreHorizontal } from "lucide-react"
+import { Type, MoreHorizontal, Image as ImageIcon, Trash2 } from "lucide-react"
 import { forwardRef, useRef, useState, useCallback, useEffect } from "react"
 import {
     DropdownMenu,
@@ -16,6 +16,7 @@ interface ImageBlockProps {
     onKeyDown: (e: React.KeyboardEvent) => void
     onAddBlockAfter: () => void
     onFocus: () => void
+    onDelete?: () => void
     ref?: React.Ref<HTMLDivElement>
 }
 
@@ -43,8 +44,9 @@ const serializeImageContent = (data: ImageData): string => {
 }
 
 export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
-    ({ id, content, onChange, onKeyDown, onAddBlockAfter, onFocus }, ref) => {
+    ({ id, content, onChange, onKeyDown, onAddBlockAfter, onFocus, onDelete }, ref) => {
         const [isEditing, setIsEditing] = useState(false)
+        const [isChangingImage, setIsChangingImage] = useState(false)
         const [imageData, setImageData] = useState<ImageData>(() => {
             const parsed = parseImageContent(content)
             return {
@@ -70,6 +72,7 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
                         setImageData(newImageData)
                         onChange(serializeImageContent(newImageData))
                         setIsEditing(false)
+                        setIsChangingImage(false)
                         setError(null)
                     }
                     reader.readAsDataURL(file)
@@ -82,6 +85,7 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
                     setImageData(newImageData)
                     onChange(serializeImageContent(newImageData))
                     setIsEditing(false)
+                    setIsChangingImage(false)
                     setError(null)
                 }
             },
@@ -152,13 +156,8 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
                 }
             }
 
-            // Verificar el tamaño inmediatamente
             checkImageSize()
-
-            // Verificar en cada cambio de ventana
             window.addEventListener('resize', checkImageSize)
-
-            // Crear un ResizeObserver para detectar cambios en el contenedor
             const observer = new ResizeObserver(checkImageSize)
             if (containerRef.current) {
                 observer.observe(containerRef.current)
@@ -170,7 +169,6 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
             }
         }, [imageData.width])
 
-        // Actualizar el estado local cuando cambia el contenido externo
         useEffect(() => {
             const parsedContent = parseImageContent(content)
             if (JSON.stringify(parsedContent) !== JSON.stringify(imageData)) {
@@ -199,11 +197,29 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
                     className="w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
                 >
                     <DropdownMenuItem
+                        onClick={() => setIsChangingImage(true)}
+                        className="flex items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                        <ImageIcon className="mr-2 h-4 w-4" />
+                        <span>Cambiar imagen</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
                         onClick={handleCaptionVisibility}
                         className="flex items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
                     >
                         <Type className="mr-2 h-4 w-4" />
                         <span>{imageData.showCaption ? "Quitar pie de foto" : "Agregar pie de foto"}</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                        onClick={() => {
+                            if (onDelete) {
+                                onDelete()
+                            }
+                        }}
+                        className="flex items-center cursor-pointer text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                    >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        <span>Eliminar imagen</span>
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
@@ -224,7 +240,7 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
                 onFocus={onFocus}
                 onKeyDown={onKeyDown}
             >
-                {isEditing ? (
+                {(isEditing || isChangingImage) ? (
                     <div className="space-y-4">
                         <ImageUpload
                             onImageSelect={handleImageSelect}
