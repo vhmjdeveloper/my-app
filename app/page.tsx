@@ -1,18 +1,28 @@
-import { Sidebar } from "./(main)/(routes)/_components/sidebar"
-import { BlockEditor } from "./(main)/(routes)/_components/block-editor"
-import { DarkModeToggle } from "./(main)/(routes)/_components/dark-mode-toggle"
+import { redirect } from "next/navigation"
+import { loadAllDocuments } from "@/lib/serializer"
+import {loadSampleDocuments} from "@/lib/sample-documents";
 
-export default function Home() {
-  return (
-      <div className="flex h-screen bg-white dark:bg-gray-900">
-        <Sidebar />
-        <main className="flex-1 overflow-auto">
-          <nav className="flex items-center justify-between p-4 border-b dark:border-gray-700">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Notion Clone</h1>
-            <DarkModeToggle />
-          </nav>
-        </main>
-      </div>
-  )
+export default function DocumentsPage() {
+    const documents = loadAllDocuments()
+
+    // Buscar específicamente el documento de muestra
+    const sampleDoc = loadSampleDocuments()
+    redirect(`/documents/${sampleDoc?.id}`)
+    if (sampleDoc) {
+        // Si existe el documento de muestra, redirigir a él
+        redirect(`/documents/sample_doc_1`)
+    }
+
+    // Si no existe el documento de muestra, redirigir al último documento modificado
+    const sortedDocs = Object.values(documents).sort(
+        (a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime()
+    )
+
+    if (sortedDocs.length > 0) {
+        redirect(`/documents/${sortedDocs[0].id}`)
+    }
+
+    // Si no hay documentos, redirigir a la creación de uno nuevo
+    const newDocId = 'doc_' + Date.now().toString(36)
+    redirect(`/documents/${newDocId}`)
 }
-

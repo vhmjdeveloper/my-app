@@ -1,3 +1,4 @@
+// lib/sample-documents.ts
 import { Document } from "@/lib/types"
 import { saveDocument, loadAllDocuments } from "./serializer"
 
@@ -60,25 +61,23 @@ const sampleDocument: Document = {
     created: new Date().toISOString()
 }
 
-export function loadSampleDocuments() {
+export function loadSampleDocuments(): Document {
     try {
-        console.log('Intentando cargar documentos de muestra...')
         const documents = loadAllDocuments()
-        console.log('Documentos existentes:', documents)
 
-        if (Object.keys(documents).length === 0) {
-            console.log('No hay documentos, guardando documento de muestra')
-            saveDocument(sampleDocument)
-
-            // Verificar que se guardó correctamente
-            const updatedDocuments = loadAllDocuments()
-            console.log('Documentos después de guardar:', updatedDocuments)
-
-            if (!updatedDocuments[sampleDocument.id]) {
-                console.error('Error: El documento de muestra no se guardó correctamente')
-            }
+        // Comprobar si el documento de muestra ya existe
+        if (documents[sampleDocument.id]) {
+            return documents[sampleDocument.id]
         }
+
+        // Si no existe, guardarlo
+        console.log('Guardando documento de muestra')
+        saveDocument(sampleDocument)
+
+        return sampleDocument
     } catch (error) {
         console.error('Error al cargar documentos de muestra:', error)
+        // En caso de error, devolver el documento de muestra de todos modos
+        return sampleDocument
     }
 }
