@@ -12,6 +12,7 @@ import { CodeBlock } from "./blocks/code-block"
 import { BulletListBlock } from "./blocks/bullet-list-block"
 import { NumberedListBlock } from "./blocks/numbered-list-block"
 import { GripVertical } from "lucide-react"
+import { EditorToolbar } from './editor-toolbar';
 
 type BlockType =
     | "text"
@@ -32,7 +33,9 @@ interface Block {
 }
 
 export function BlockEditor() {
-  const [blocks, setBlocks] = useState<Block[]>([{ id: "1", type: "heading-1", content: "Nueva Página" }])
+  const [blocks, setBlocks] = useState<Block[]>([
+    { id: "1", type: "heading-1", content: "Nueva Página" }
+  ]);
   const [commandPalette, setCommandPalette] = useState({
     isOpen: false,
     position: { top: 0, left: 0 },
@@ -254,6 +257,7 @@ export function BlockEditor() {
       onAddBlockAfter: () => createNewBlock(block.id, "text", false),
       onDelete: () => handleBlockDelete(block.id),
       ...block.props,
+
     }
 
     const getBlockContent = () => {
@@ -300,7 +304,6 @@ export function BlockEditor() {
       }
     }
     const isSelected = selectedBlockIds.includes(block.id)
-
     return (
         <Draggable key={block.id} draggableId={block.id} index={index}>
           {(provided, snapshot) => (
@@ -324,11 +327,19 @@ export function BlockEditor() {
           )}
         </Draggable>
     )
-  }
 
+  }
+  const handleDocumentLoad = (newBlocks: Block[]) => {
+    setBlocks(newBlocks);
+    setFocusedBlockId(null);
+    setSelectedBlockIds([]);
+  };
   return (
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="max-w-4xl mx-auto p-8">
+          <div className="mb-4">
+            <EditorToolbar blocks={blocks} onDocumentLoad={handleDocumentLoad} />
+          </div>
           <Droppable droppableId="blocks">
             {(provided) => (
                 <div
