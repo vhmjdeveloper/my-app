@@ -1,6 +1,6 @@
-import { Sidebar } from "./components/sidebar"
-import { BlockEditor } from "./components/block-editor"
-import { DarkModeToggle } from "./components/dark-mode-toggle"
+import { Sidebar } from "./(main)/(routes)/_components/sidebar"
+import { BlockEditor } from "./(main)/(routes)/_components/block-editor"
+import { DarkModeToggle } from "./(main)/(routes)/_components/dark-mode-toggle"
 
 export default function Home() {
   return (
@@ -11,7 +11,6 @@ export default function Home() {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Notion Clone</h1>
             <DarkModeToggle />
           </nav>
-          <BlockEditor />
         </main>
       </div>
   )

@@ -33,7 +33,52 @@ export function serializeDocument(blocks: Block[]): Document {
         created: now,
     };
 }
+export function serializeNewDocument(blocks: Block[]): Document {
+    const titleBlock = blocks.find(block => block.type === "heading-1");
+    const title = titleBlock?.content || "Untitled";
+    const now = new Date().toISOString();
 
+    return {
+        id: generateDocumentId(),
+        title,
+        blocks: processBlocks(blocks),
+        lastModified: now,
+        created: now,
+    };
+}
+
+// Nueva función para serializar un documento existente
+export function serializeExistingDocument(blocks: Block[], documentId: string): Document {
+    const titleBlock = blocks.find(block => block.type === "heading-1");
+    const title = titleBlock?.content || "Untitled";
+
+    return {
+        id: documentId,
+        title,
+        blocks: processBlocks(blocks),
+        lastModified: new Date().toISOString(),
+        created: new Date().toISOString(), // Esta será reemplazada por la fecha original en saveDocument
+    };
+}
+
+// Función auxiliar para procesar los bloques
+function processBlocks(blocks: Block[]): Block[] {
+    return blocks.map(block => {
+        if (block.type === "image") {
+            try {
+                const imageData = JSON.parse(block.content);
+                if (imageData.url && imageData.url.startsWith('data:')) {
+                    return block;
+                } else if (imageData.url) {
+                    return block;
+                }
+            } catch (e) {
+                return block;
+            }
+        }
+        return block;
+    });
+}
 export function deserializeDocument(document: Document): Block[] {
     return document.blocks.map(block => {
         if (block.type === "image") {
@@ -58,8 +103,20 @@ function generateDocumentId(): string {
 export function saveDocument(document: Document): void {
     try {
         const documents = loadAllDocuments();
-        documents[document.id] = document;
+
+        // Si el documento ya existe, preservar su fecha de creación
+        if (documents[document.id]) {
+            document.created = documents[document.id].created;
+        }
+
+        // Actualizar o agregar el documento
+        documents[document.id] = {
+            ...document,
+            lastModified: new Date().toISOString()
+        };
+
         localStorage.setItem('documents', JSON.stringify(documents));
+        console.log('Documento guardado:', documents[document.id]);
     } catch (e) {
         console.error('Error saving document:', e);
         throw new Error('Failed to save document');

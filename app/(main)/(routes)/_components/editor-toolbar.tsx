@@ -1,21 +1,25 @@
 // editor-toolbar.tsx
 import { Save, FileDown } from 'lucide-react';
-
-import {deserializeDocument, loadAllDocuments, saveDocument, serializeDocument} from "@/lib/serializer";
-import {Block} from "@/lib/types";
+import {
+    deserializeDocument,
+    loadAllDocuments,
+    saveDocument,
+    serializeExistingDocument
+} from "@/lib/serializer";
+import { Block } from "@/lib/types";
 
 interface EditorToolbarProps {
     blocks: Block[];
+    documentId: string; // Añadimos documentId a las props
     onDocumentLoad: (blocks: Block[]) => void;
 }
 
-export function EditorToolbar({ blocks, onDocumentLoad }: EditorToolbarProps) {
+export function EditorToolbar({ blocks, documentId, onDocumentLoad }: EditorToolbarProps) {
     const handleSave = () => {
         try {
-            const document = serializeDocument(blocks);
-            console.log('///',document)
+            console.log('Guardando documento con ID:', documentId);
+            const document = serializeExistingDocument(blocks, documentId);
             saveDocument(document);
-            // Mostrar una notificación de éxito
             alert('Documento guardado exitosamente');
         } catch (error) {
             console.error('Error saving document:', error);
@@ -24,9 +28,7 @@ export function EditorToolbar({ blocks, onDocumentLoad }: EditorToolbarProps) {
     };
 
     const handleLoad = () => {
-        // Aquí podrías abrir un modal para seleccionar el documento a cargar
         const documents = loadAllDocuments();
-        // Por ahora, simplemente cargamos el último documento guardado
         const lastDocument = Object.values(documents).sort((a, b) =>
             new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime()
         )[0];

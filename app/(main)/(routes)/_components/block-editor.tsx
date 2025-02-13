@@ -13,6 +13,7 @@ import { BulletListBlock } from "./blocks/bullet-list-block"
 import { NumberedListBlock } from "./blocks/numbered-list-block"
 import { GripVertical } from "lucide-react"
 import { EditorToolbar } from './editor-toolbar';
+import {serializeDocument, saveDocument} from "@/lib/serializer";
 
 type BlockType =
     | "text"
@@ -31,11 +32,20 @@ interface Block {
   content: string
   props?: Record<string, any>
 }
-
-export function BlockEditor() {
-  const [blocks, setBlocks] = useState<Block[]>([
-    { id: "1", type: "heading-1", content: "Nueva Página" }
-  ]);
+interface BlockEditorProps {
+  initialBlocks?: Block[]
+  documentId: string
+}
+export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
+  const [blocks, setBlocks] = useState<Block[]>([])
+  const [isInitialized, setIsInitialized] = useState(false)
+  useEffect(() => {
+    if (initialBlocks && !isInitialized) {
+      console.log('Inicializando bloques:', initialBlocks)
+      setBlocks(initialBlocks)
+      setIsInitialized(true)
+    }
+  }, [initialBlocks, isInitialized])
   const [commandPalette, setCommandPalette] = useState({
     isOpen: false,
     position: { top: 0, left: 0 },
@@ -46,6 +56,26 @@ export function BlockEditor() {
   const [lastSelectedBlockId, setLastSelectedBlockId] = useState<string | null>(null)
   const blockRefs = useRef<{ [key: string]: HTMLElement | null }>({})
 
+
+  useEffect(() => {
+    if (!blocks.length) return;
+
+    const autoSave = () => {
+      try {
+        const document = serializeExistingDocument(blocks, documentId);
+        console.log('Guardando documento con ID:', documentId);
+        saveDocument(document);
+      } catch (error) {
+        console.error('Error autosaving:', error);
+      }
+    };
+
+    // Guardar inmediatamente cuando los bloques cambian
+    autoSave();
+
+    const interval = setInterval(autoSave, 30000);
+    return () => clearInterval(interval);
+  }, [blocks, documentId]);
   useEffect(() => {
     // Solo ejecutar en el cliente
     if (typeof window === 'undefined') return;
@@ -337,9 +367,14 @@ export function BlockEditor() {
   return (
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="max-w-4xl mx-auto p-8">
-          <div className="mb-4">
-            <EditorToolbar blocks={blocks} onDocumentLoad={handleDocumentLoad} />
-          </div>
+          <EditorToolbar
+              blocks={blocks}
+              documentId={documentId}
+              onDocumentLoad={(newBlocks) => {
+                setBlocks(newBlocks)
+                setIsInitialized(true)
+              }}
+          />
           <Droppable droppableId="blocks">
             {(provided) => (
                 <div
