@@ -9,7 +9,7 @@ const sampleDocument: Document = {
         {
             id: "1",
             type: "heading-1",
-            content: "👋 Bienvenido a tu Notion Clone"
+            content: "👋 Bienvenido a tu Bunny NOtes"
         },
         {
             id: "2",

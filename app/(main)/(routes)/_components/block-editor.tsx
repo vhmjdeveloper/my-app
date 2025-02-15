@@ -13,7 +13,7 @@ import { BulletListBlock } from "./blocks/bullet-list-block"
 import { NumberedListBlock } from "./blocks/numbered-list-block"
 import { GripVertical } from "lucide-react"
 import { EditorToolbar } from './editor-toolbar';
-import {serializeDocument, saveDocument} from "@/lib/serializer";
+import {serializeDocument, saveDocument, serializeExistingDocument} from "@/lib/serializer";
 
 type BlockType =
     | "text"
