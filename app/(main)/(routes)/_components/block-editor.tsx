@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useRef, useEffect } from "react"
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"
+import {DragDropContext, Droppable, Draggable, DropResult} from "@hello-pangea/dnd"
 import { CommandPalette } from "./command-palette"
 import { TextBlock } from "./blocks/text-block"
 import { HeadingBlock } from "./blocks/heading-block"
@@ -13,7 +13,7 @@ import { BulletListBlock } from "./blocks/bullet-list-block"
 import { NumberedListBlock } from "./blocks/numbered-list-block"
 import { GripVertical } from "lucide-react"
 import { EditorToolbar } from './editor-toolbar';
-import {serializeDocument, saveDocument, serializeExistingDocument} from "@/lib/serializer";
+import { saveDocument, serializeExistingDocument} from "@/lib/serializer";
 
 type BlockType =
     | "text"
@@ -30,7 +30,7 @@ interface Block {
   id: string
   type: BlockType
   content: string
-  props?: Record<string, any>
+  props?: Record<string, unknown>
 }
 interface BlockEditorProps {
   initialBlocks?: Block[]
@@ -130,7 +130,7 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
     setSelectedBlockIds([])
   }
 
-  const [lastEnterPress, setLastEnterPress] = useState<{ blockId: string; timestamp: number } | null>(null)
+  // const [lastEnterPress, setLastEnterPress] = useState<{ blockId: string; timestamp: number } | null>(null)
     const navigateBlocks = (currentBlockId: string, direction: 'up' | 'down') => {
         const currentIndex = blocks.findIndex(b => b.id === currentBlockId);
         if (currentIndex === -1) return;
@@ -175,7 +175,7 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
 
     if (e.key === "Backspace" && block.content === "" && blocks.length > 1) {
       e.preventDefault()
-      const index = blocks.findIndex((b) => b.id === blockId)
+      const index = Math.max(0, blocks.findIndex((b) => b.id === blockId))
       const newBlocks = blocks.filter((b) => b.id !== blockId)
       setBlocks(newBlocks)
       setFocusedBlockId(newBlocks[Math.max(0, index - 1)].id)
@@ -251,7 +251,7 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
     }
   }
 
-  const handleDragEnd = (result: any) => {
+  const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return
 
     const items = Array.from(blocks)
@@ -284,7 +284,9 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
       content: block.content,
       onChange: (content: string) => handleBlockChange(block.id, content),
       onKeyDown: (e: React.KeyboardEvent) => handleKeyDown(e, block.id),
-      ref: (el: HTMLElement | null) => (blockRefs.current[block.id] = el),
+      textareaRef: (el: HTMLTextAreaElement | null) => {
+        blockRefs.current[block.id] = el;
+      },
       onFocus: () => setFocusedBlockId(block.id),
       onAddBlockAfter: () => createNewBlock(block.id, "text", false),
       onDelete: () => handleBlockDelete(block.id),
@@ -323,7 +325,7 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
 
     if (isPageTitle) {
       return (
-          <div className="mb-8">
+          <div className="mb-8" key={`page-title-${block.id}`}>
             {getBlockContent()}
           </div>
       )
@@ -339,8 +341,10 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
     return (
         <Draggable key={block.id} draggableId={block.id} index={index}>
           {(provided, snapshot) => (
-              <div
-                  ref={provided.innerRef}
+              <div key={'my'}
+                  ref={(el) => {
+                    provided.innerRef(el as HTMLDivElement);
+                  }}
                   {...provided.draggableProps}
                   onClick={(e) => handleBlockClick(e, block.id)}
                   className={`group relative flex gap-2 items-start rounded-lg -ml-10 pl-10 
@@ -348,7 +352,7 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
               ${isSelected ? "bg-blue-50 dark:bg-blue-900/20" : "hover:bg-gray-50 dark:hover:bg-gray-800/50"}
             `}
               >
-                <div
+                <div key={'other'}
                     {...provided.dragHandleProps}
                     className="absolute left-2 top-1.5 opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing"
                 >
@@ -361,13 +365,14 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
     )
 
   }
-  const handleDocumentLoad = (newBlocks: Block[]) => {
+
+/*  const handleDocumentLoad = (newBlocks: Block[]) => {
     setBlocks(newBlocks);
     setFocusedBlockId(null);
     setSelectedBlockIds([]);
-  };
+  };*/
   return (
-      <DragDropContext onDragEnd={handleDragEnd}>
+      <DragDropContext onDragEnd={handleDragEnd} >
         <div className="max-w-4xl mx-auto p-8">
           <EditorToolbar
               blocks={blocks}
@@ -377,10 +382,10 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
                 setIsInitialized(true)
               }}
           />
-          <Droppable droppableId="blocks">
+          <Droppable droppableId="blocks" key="droppable-blocks">
             {(provided) => (
-                <div
-                    {...provided.droppableProps}
+                <div key="droppable-container"
+                     {...provided.droppableProps}
                     ref={provided.innerRef}
                     className="min-h-[70vh] relative space-y-1"
                 >
@@ -388,8 +393,8 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
                   {provided.placeholder}
 
                   {/* Área cliqueable al final */}
-                  <div
-                      className="min-h-32 relative cursor-text"
+                  <div   key="clickable-area"
+                         className="min-h-32 relative cursor-text"
                       onClick={() => {
                         if (blocks.length > 0) {
                           const lastBlock = blocks[blocks.length - 1];
@@ -398,7 +403,7 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
                       }}
                   >
                     {blocks.length === 0 && (
-                        <div className="absolute inset-0 flex items-center justify-center text-gray-400 dark:text-gray-600">
+                        <div key={'x'} className="absolute inset-0 flex items-center justify-center text-gray-400 dark:text-gray-600">
                           Haz clic en cualquier lugar para comenzar a escribir
                         </div>
                     )}

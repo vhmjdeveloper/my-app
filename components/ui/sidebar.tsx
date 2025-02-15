@@ -270,7 +270,7 @@ Sidebar.displayName = "Sidebar"
 
 const SidebarTrigger = React.forwardRef<
     React.ElementRef<typeof Button>,
-    React.ComponentProps<typeof Button> & {
+    Omit<React.ComponentProps<typeof Button>, "variant"> & {
     variant?: "navbar" | "sidebar"
 }
 >(({ className, onClick,variant = "sidebar", ...props  }, ref) => {
