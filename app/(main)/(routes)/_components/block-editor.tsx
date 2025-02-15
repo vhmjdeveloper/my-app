@@ -57,25 +57,27 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
   const blockRefs = useRef<{ [key: string]: HTMLElement | null }>({})
 
 
-  useEffect(() => {
-    if (!blocks.length) return;
 
-    const autoSave = () => {
-      try {
-        const document = serializeExistingDocument(blocks, documentId);
-        console.log('Guardando documento con ID:', documentId);
-        saveDocument(document);
-      } catch (error) {
-        console.error('Error autosaving:', error);
-      }
-    };
 
-    // Guardar inmediatamente cuando los bloques cambian
-    autoSave();
+    useEffect(() => {
+      if (!blocks.length) return;
 
-    const interval = setInterval(autoSave, 30000);
-    return () => clearInterval(interval);
-  }, [blocks, documentId]);
+      const autoSave = () => {
+        try {
+          const document = serializeExistingDocument(blocks, documentId);
+          console.log('Guardando documento con ID:', documentId);
+          saveDocument(document);
+        } catch (error) {
+          console.error('Error autosaving:', error);
+        }
+      };
+
+      // Crear un timer debounced para el autoguardado
+      const timer = setTimeout(autoSave, 1000);
+
+      // Limpiar el timer si los bloques cambian antes de que se ejecute
+      return () => clearTimeout(timer);
+    }, [blocks, documentId]);
   useEffect(() => {
     // Solo ejecutar en el cliente
     if (typeof window === 'undefined') return;
