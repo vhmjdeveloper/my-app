@@ -1,21 +1,26 @@
-import { Sidebar } from "@/app/(main)/(routes)/_components/sidebar"
+
 import { DarkModeToggle } from "@/app/(main)/(routes)/_components/dark-mode-toggle"
+import {SidebarProvider, SidebarTrigger, useSidebar} from "@/components/ui/sidebar";
+import {AppSidebar} from "@/app/(main)/(routes)/_components/app-sidebar";
+import React from "react";
+import {Navbar} from "@/app/(main)/(routes)/_components/navbar";
 
 export default function MainLayout({
                                        children,
                                    }: {
     children: React.ReactNode
 }) {
+
     return (
         <div className="flex h-screen bg-white dark:bg-gray-900">
-            <Sidebar />
+            <SidebarProvider>
+                <AppSidebar collapsible='offcanvas'/>
+
             <main className="flex-1 overflow-auto">
-                <nav className="flex items-center justify-between p-4 border-b dark:border-gray-700">
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Notion Clone</h1>
-                    <DarkModeToggle />
-                </nav>
+               <Navbar/>
                 {children}
             </main>
+            </SidebarProvider>
         </div>
     )
 }
