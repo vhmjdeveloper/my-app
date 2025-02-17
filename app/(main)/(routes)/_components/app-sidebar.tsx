@@ -2,12 +2,8 @@
 import {
     Sidebar,
     SidebarContent,
-    SidebarHeader,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem, SidebarTrigger, useSidebar
+    SidebarHeader, useSidebar
 } from "@/components/ui/sidebar";
-import Logo from "@/app/(main)/(routes)/_components/logo";
 import {SidebarTitle} from "@/app/(main)/(routes)/_components/side-bar-title";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {

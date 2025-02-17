@@ -2,7 +2,7 @@ export interface Block {
     id: string;
     type: BlockType;
     content: string;
-    props?: Record<string, any>;
+    props?: Record<string, unknown>;
 }
 export type BlockType =
     | "text"

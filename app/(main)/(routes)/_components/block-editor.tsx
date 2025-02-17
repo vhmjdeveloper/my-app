@@ -12,7 +12,7 @@ import { CodeBlock } from "./blocks/code-block"
 import { BulletListBlock } from "./blocks/bullet-list-block"
 import { NumberedListBlock } from "./blocks/numbered-list-block"
 import { GripVertical } from "lucide-react"
-import { EditorToolbar } from './editor-toolbar';
+
 import { saveDocument, serializeExistingDocument} from "@/lib/serializer";
 
 type BlockType =
@@ -374,14 +374,6 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
   return (
       <DragDropContext onDragEnd={handleDragEnd} >
         <div className="max-w-4xl mx-auto p-8">
-          <EditorToolbar
-              blocks={blocks}
-              documentId={documentId}
-              onDocumentLoad={(newBlocks) => {
-                setBlocks(newBlocks)
-                setIsInitialized(true)
-              }}
-          />
           <Droppable droppableId="blocks" key="droppable-blocks">
             {(provided) => (
                 <div key="droppable-container"

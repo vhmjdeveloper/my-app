@@ -1,6 +1,4 @@
-
-import { DarkModeToggle } from "@/app/(main)/(routes)/_components/dark-mode-toggle"
-import {SidebarProvider, SidebarTrigger, useSidebar} from "@/components/ui/sidebar";
+import {SidebarProvider} from "@/components/ui/sidebar";
 import {AppSidebar} from "@/app/(main)/(routes)/_components/app-sidebar";
 import React from "react";
 import {Navbar} from "@/app/(main)/(routes)/_components/navbar";

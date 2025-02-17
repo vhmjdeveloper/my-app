@@ -80,7 +80,7 @@ export default function ImageUpload({ onImageSelect, onImageError, maxSize = 5 }
                     onImageSelect(null, url.toString());
                     setImageUrl('');
                 } catch (err) {
-                    setError('Por favor ingresa una URL válida');
+                    setError('Por favor ingresa una URL válida'+ err);
                     onImageError('URL inválida');
                 }
             }

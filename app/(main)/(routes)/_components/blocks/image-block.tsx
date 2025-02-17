@@ -8,6 +8,8 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import Image from "next/image";
+
 
 interface ImageBlockProps {
     id: string
@@ -91,7 +93,13 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
             },
             [imageData, onChange]
         )
+        const [aspectRatio, setAspectRatio] = useState(1)
 
+// Agregar un handler para cuando la imagen carga
+        const handleImageLoad = (event: React.SyntheticEvent<HTMLImageElement>) => {
+            const img = event.target as HTMLImageElement
+            setAspectRatio(img.naturalHeight / img.naturalWidth)
+        }
         const handleImageError = useCallback((errorMessage: string) => {
             setError(errorMessage)
         }, [])
@@ -174,7 +182,7 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
             if (JSON.stringify(parsedContent) !== JSON.stringify(imageData)) {
                 setImageData(parsedContent)
             }
-        }, [content])
+        }, [content, imageData])
 
         const ImageMenu = () => (
             <DropdownMenu>
@@ -234,7 +242,7 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
                     } else if (ref) {
                         ref.current = el
                     }
-                    containerRef.current = el
+                    (containerRef as React.MutableRefObject<HTMLElement | null>).current = el
                 }}
                 tabIndex={0}
                 onFocus={onFocus}
@@ -300,11 +308,14 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
                                     }}
                                 >
                                     <div className="relative group/image">
-                                        <img
-                                            src={imageData.url}
+                                        <Image
+                                            src={decodeURIComponent(imageData.url)}
                                             alt={imageData.caption || "Contenido subido por el usuario"}
                                             className="w-full h-auto rounded-lg shadow-md object-contain cursor-default"
                                             draggable={false}
+                                            width={imageData.width}
+                                            height={1000 * aspectRatio}
+                                            onLoad={handleImageLoad}
                                         />
                                         <div className="absolute top-2 right-2 z-20 opacity-0 group-hover/image:opacity-100 transition-opacity">
                                             <ImageMenu />

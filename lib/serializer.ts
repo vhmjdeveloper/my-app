@@ -1,4 +1,4 @@
-import {Block, Document, BlockType} from "@/lib/types";
+import {Block, Document} from "@/lib/types";
 
 export function serializeDocument(blocks: Block[]): Document {
     // Obtener el título del primer bloque heading-1 o usar uno por defecto
@@ -24,6 +24,7 @@ export function serializeDocument(blocks: Block[]): Document {
                     }
                 } catch (e) {
                     // Si no es JSON válido, lo dejamos como está
+                    console.error(e)
                     return block;
                 }
             }
@@ -73,6 +74,7 @@ function processBlocks(blocks: Block[]): Block[] {
                     return block;
                 }
             } catch (e) {
+                console.error(e)
                 return block;
             }
         }
@@ -83,10 +85,11 @@ export function deserializeDocument(document: Document): Block[] {
     return document.blocks.map(block => {
         if (block.type === "image") {
             try {
-                const imageData = JSON.parse(block.content);
+            //    const imageData = JSON.parse(block.content);
                 // Verificar si necesitamos convertir de base64
                 return block;
             } catch (e) {
+                console.error(e)
                 return block;
             }
         }
