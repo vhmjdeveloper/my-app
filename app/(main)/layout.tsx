@@ -15,7 +15,7 @@ export default function MainLayout({
                 <AppSidebar collapsible='offcanvas'/>
 
             <main className="flex-1 overflow-auto">
-               <Navbar/>
+               <Navbar />
                 {children}
             </main>
             </SidebarProvider>
