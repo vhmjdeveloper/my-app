@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { BlockEditor } from "../../_components/block-editor"
-import { loadDocument } from "@/lib/serializer"
+import { loadDocument, saveDocument } from "@/lib/serializer"
 import { Block } from "@/lib/types"
 
 interface DocumentPageProps {
@@ -28,18 +28,29 @@ export default function DocumentsIdPage({ params }: DocumentPageProps) {
                 setBlocks(doc.blocks)
             } else {
                 console.log('Creando nuevo documento')
-                setBlocks([
+                const initialBlocks = [
                     {
                         id: "1",
-                        type: "heading-1",
+                        type: "heading-1" as const,
                         content: "Nuevo Documento"
                     },
                     {
                         id: "2",
-                        type: "text",
+                        type: "text" as const,
                         content: "Comienza a escribir aquí..."
                     }
-                ])
+                ];
+
+                // Guardar el documento inicial con el título correcto
+                saveDocument({
+                    id: params.documentId,
+                    title: "Nuevo Documento",
+                    blocks: initialBlocks,
+                    lastModified: new Date().toISOString(),
+                    created: new Date().toISOString()
+                });
+
+                setBlocks(initialBlocks)
             }
             setIsLoading(false)
         }

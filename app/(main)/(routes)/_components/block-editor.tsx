@@ -12,8 +12,8 @@ import { CodeBlock } from "./blocks/code-block"
 import { BulletListBlock } from "./blocks/bullet-list-block"
 import { NumberedListBlock } from "./blocks/numbered-list-block"
 import { GripVertical } from "lucide-react"
-
 import { saveDocument, serializeExistingDocument} from "@/lib/serializer";
+import {useDocument} from "@/context/document-context";
 
 type BlockType =
     | "text"
@@ -37,6 +37,7 @@ interface BlockEditorProps {
   documentId: string
 }
 export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
+  const { document, updateDocument } = useDocument();
   const [blocks, setBlocks] = useState<Block[]>([])
   const [isInitialized, setIsInitialized] = useState(false)
   useEffect(() => {
@@ -46,6 +47,36 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
       setIsInitialized(true)
     }
   }, [initialBlocks, isInitialized])
+  useEffect(() => {
+    if (document && isInitialized) {
+      setBlocks(document.blocks);
+    }
+  }, [document, isInitialized])
+  const handleBlockChange = (id: string, content: string) => {
+    const newBlocks = blocks.map((block) => (block.id === id ? { ...block, content } : block));
+    setBlocks(newBlocks);
+
+    if (!document) return;
+
+    // Verificar si es el primer bloque y es heading-1
+    const changedBlock = newBlocks[0];
+    if (changedBlock && changedBlock.id === id && changedBlock.type === "heading-1") {
+      // Actualizar tanto el título como los bloques
+      updateDocument({
+        ...document,
+        title: content,
+        blocks: newBlocks,
+        lastModified: new Date().toISOString()
+      });
+    } else {
+      // Solo actualizar los bloques
+      updateDocument({
+        ...document,
+        blocks: newBlocks,
+        lastModified: new Date().toISOString()
+      });
+    }
+  };
   const [commandPalette, setCommandPalette] = useState({
     isOpen: false,
     position: { top: 0, left: 0 },
@@ -97,9 +128,7 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
     }
   }, [focusedBlockId])
 
-  const handleBlockChange = (id: string, content: string) => {
-    setBlocks(blocks.map((block) => (block.id === id ? { ...block, content } : block)))
-  }
+
 
   const createNewBlock = (currentBlockId: string, newBlockType: BlockType = "text", isNewPage = false) => {
     const currentBlockIndex = blocks.findIndex((b) => b.id === currentBlockId)
@@ -374,6 +403,7 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
   return (
       <DragDropContext onDragEnd={handleDragEnd} >
         <div className="max-w-4xl mx-auto p-8">
+
           <Droppable droppableId="blocks" key="droppable-blocks">
             {(provided) => (
                 <div key="droppable-container"
