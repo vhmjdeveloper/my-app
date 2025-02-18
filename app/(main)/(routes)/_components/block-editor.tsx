@@ -320,8 +320,8 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
       content: block.content,
       onChange: (content: string) => handleBlockChange(block.id, content),
       onKeyDown: (e: React.KeyboardEvent) => handleKeyDown(e, block.id),
-      ref: (el: HTMLTextAreaElement | null) => {
-        blockRefs.current[block.id] = el
+      ref: (el: HTMLElement | null) => {
+        blockRefs.current[block.id] = el as HTMLTextAreaElement | null
       },
       onFocus: () => setFocusedBlockId(block.id),
       onAddBlockAfter: () => createNewBlock(block.id, "text", false),
