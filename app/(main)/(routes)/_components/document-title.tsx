@@ -4,18 +4,33 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollText } from "lucide-react";
 import { useDocument } from "@/context/document-context";
-import { loadDocument } from "@/lib/serializer";
+import { loadDocument, saveDocument } from "@/lib/serializer";
 
 interface DocumentTitleProps {
-    documentId?: string; // Optional because it can come from context in navbar
+    documentId?: string;
     variant?: "navbar" | "sidebar";
+    isOpen?: boolean;
+    onOpenChange?: (open: boolean) => void;
 }
 
-export function DocumentTitle({ documentId, variant = "navbar" }: DocumentTitleProps) {
+export function DocumentTitle({
+                                  documentId,
+                                  variant = "navbar",
+                                  isOpen: controlledIsOpen,
+                                  onOpenChange
+                              }: DocumentTitleProps) {
     const { document: contextDocument, updateDocument } = useDocument();
     const [document, setDocument] = useState(contextDocument);
     const [inputValue, setInputValue] = useState("");
-    const [isOpen, setIsOpen] = useState(false);
+    const [internalIsOpen, setInternalIsOpen] = useState(false);
+
+    const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
+    const setIsOpen = (open: boolean) => {
+        if (onOpenChange) {
+            onOpenChange(open);
+        }
+        setInternalIsOpen(open);
+    };
 
     useEffect(() => {
         if (documentId) {
@@ -29,6 +44,21 @@ export function DocumentTitle({ documentId, variant = "navbar" }: DocumentTitleP
             setInputValue(contextDocument.title);
         }
     }, [documentId, contextDocument]);
+
+    useEffect(() => {
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === "documents" && documentId) {
+                const doc = loadDocument(documentId);
+                if (doc) {
+                    setDocument(doc);
+                    setInputValue(doc.title);
+                }
+            }
+        };
+
+        window.addEventListener("storage", handleStorageChange);
+        return () => window.removeEventListener("storage", handleStorageChange);
+    }, [documentId]);
 
     const handleTitleChange = (newTitle: string) => {
         setInputValue(newTitle);
@@ -46,7 +76,10 @@ export function DocumentTitle({ documentId, variant = "navbar" }: DocumentTitleP
         };
 
         setDocument(updatedDoc);
-        updateDocument(updatedDoc);
+        saveDocument(updatedDoc);
+        if (updateDocument) {
+            updateDocument(updatedDoc);
+        }
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -64,7 +97,7 @@ export function DocumentTitle({ documentId, variant = "navbar" }: DocumentTitleP
 
     const buttonStyle = variant === "navbar"
         ? "p-1 pt-1"
-        : "p-0 h-auto font-normal justify-start";
+        : "p-0 h-auto font-normal justify-start w-full text-left";
 
     return (
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ScrollText, MoreHorizontal, Plus, Trash2 } from "lucide-react";
+import { ScrollText, MoreHorizontal, Plus, Trash2, Pencil } from "lucide-react";
 import { loadAllDocuments, deleteDocument } from "@/lib/serializer";
 import { Document } from "@/lib/types";
 import { useRouter } from "next/navigation";
@@ -15,11 +15,13 @@ import { cn } from "@/lib/utils";
 
 export function DocumentList() {
     const [documents, setDocuments] = useState<Document[]>([]);
+    const [renamingDoc, setRenamingDoc] = useState<string | null>(null);
     const router = useRouter();
     const { document: currentDocument } = useDocument();
 
+    // Cargar documentos inicialmente y escuchar cambios de storage
     useEffect(() => {
-        const loadDocuments = () => {
+        const loadAndSortDocuments = () => {
             const allDocs = loadAllDocuments();
             const sortedDocs = Object.values(allDocs).sort(
                 (a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime()
@@ -27,17 +29,31 @@ export function DocumentList() {
             setDocuments(sortedDocs);
         };
 
-        loadDocuments();
-        // Set up storage event listener for real-time updates
+        loadAndSortDocuments();
+
         const handleStorageChange = (e: StorageEvent) => {
             if (e.key === "documents") {
-                loadDocuments();
+                loadAndSortDocuments();
             }
         };
 
         window.addEventListener("storage", handleStorageChange);
         return () => window.removeEventListener("storage", handleStorageChange);
     }, []);
+
+    // Actualizar documento específico cuando cambia
+    useEffect(() => {
+        if (currentDocument) {
+            setDocuments(prev => {
+                const updatedDocs = prev.map(doc =>
+                    doc.id === currentDocument.id ? currentDocument : doc
+                );
+                return updatedDocs.sort((a, b) =>
+                    new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime()
+                );
+            });
+        }
+    }, [currentDocument?.title, currentDocument?.lastModified]);
 
     const handleDocumentClick = (docId: string) => {
         router.push(`/documents/${docId}`);
@@ -48,19 +64,16 @@ export function DocumentList() {
         if (confirm("¿Estás seguro de que deseas eliminar este documento?")) {
             deleteDocument(docId);
 
-            // Si el documento actual es el que se está eliminando, redirigir a otro documento
             if (currentDocument?.id === docId) {
                 const remainingDocs = documents.filter(doc => doc.id !== docId);
                 if (remainingDocs.length > 0) {
                     router.push(`/documents/${remainingDocs[0].id}`);
                 } else {
-                    // Si no quedan documentos, crear uno nuevo
                     const newDocId = 'doc_' + Date.now().toString(36);
                     router.push(`/documents/${newDocId}`);
                 }
             }
 
-            // Actualizar la lista local de documentos
             setDocuments(prev => prev.filter(doc => doc.id !== docId));
         }
     };
@@ -95,7 +108,20 @@ export function DocumentList() {
                     >
                         <ScrollText className="h-4 w-4 mr-2 text-gray-500 dark:text-gray-400 shrink-0" />
                         <div className="flex-1 min-w-0">
-                            <DocumentTitle documentId={doc.id} variant="sidebar" />
+                            {renamingDoc === doc.id ? (
+                                <DocumentTitle
+                                    documentId={doc.id}
+                                    variant="sidebar"
+                                    isOpen={true}
+                                    onOpenChange={(open) => {
+                                        if (!open) setRenamingDoc(null);
+                                    }}
+                                />
+                            ) : (
+                                <span className="truncate block">
+                                    {doc.id === currentDocument?.id ? currentDocument.title : doc.title}
+                                </span>
+                            )}
                         </div>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
@@ -105,11 +131,21 @@ export function DocumentList() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48">
                                 <DropdownMenuItem
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setRenamingDoc(doc.id);
+                                    }}
+                                    className="flex items-center text-gray-700 dark:text-gray-300"
+                                >
+                                    <Pencil className="h-4 w-4 mr-2" />
+                                    Renombrar
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
                                     onClick={(e) => handleDeleteDocument(doc.id, e)}
-                                    className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400 focus:bg-red-50 dark:focus:bg-red-900/10"
+                                    className="flex items-center text-red-600 dark:text-red-400"
                                 >
                                     <Trash2 className="h-4 w-4 mr-2" />
-                                    Eliminar documento
+                                    Eliminar
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
