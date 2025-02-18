@@ -4,35 +4,49 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollText } from "lucide-react";
 import { useDocument } from "@/context/document-context";
+import { loadDocument } from "@/lib/serializer";
 
-export function DocumentTitle() {
-    const { document, updateDocument } = useDocument();
+interface DocumentTitleProps {
+    documentId?: string; // Optional because it can come from context in navbar
+    variant?: "navbar" | "sidebar";
+}
+
+export function DocumentTitle({ documentId, variant = "navbar" }: DocumentTitleProps) {
+    const { document: contextDocument, updateDocument } = useDocument();
+    const [document, setDocument] = useState(contextDocument);
     const [inputValue, setInputValue] = useState("");
     const [isOpen, setIsOpen] = useState(false);
 
     useEffect(() => {
-        if (document) {
-            setInputValue(document.title);
+        if (documentId) {
+            const doc = loadDocument(documentId);
+            if (doc) {
+                setDocument(doc);
+                setInputValue(doc.title);
+            }
+        } else if (contextDocument) {
+            setDocument(contextDocument);
+            setInputValue(contextDocument.title);
         }
-    }, [document]);
+    }, [documentId, contextDocument]);
 
     const handleTitleChange = (newTitle: string) => {
         setInputValue(newTitle);
         if (!document) return;
 
-        // Actualizar el título y el primer bloque heading-1
-        const updatedBlocks = document.blocks.map((block, index) =>
-            index === 0 && block.type === "heading-1"
-                ? { ...block, content: newTitle }
-                : block
-        );
-
-        updateDocument({
+        const updatedDoc = {
             ...document,
             title: newTitle,
-            blocks: updatedBlocks,
+            blocks: document.blocks.map((block, index) =>
+                index === 0 && block.type === "heading-1"
+                    ? { ...block, content: newTitle }
+                    : block
+            ),
             lastModified: new Date().toISOString()
-        });
+        };
+
+        setDocument(updatedDoc);
+        updateDocument(updatedDoc);
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -48,11 +62,15 @@ export function DocumentTitle() {
 
     if (!document) return null;
 
+    const buttonStyle = variant === "navbar"
+        ? "p-1 pt-1"
+        : "p-0 h-auto font-normal justify-start";
+
     return (
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="p-1 pt-1">
-                    {document.title}
+                <Button variant="ghost" className={buttonStyle}>
+                    <span className="truncate">{document.title}</span>
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
