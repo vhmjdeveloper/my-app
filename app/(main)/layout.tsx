@@ -19,7 +19,7 @@ export default function MainLayout({
         <div className="flex h-screen bg-white dark:bg-gray-900">
             <SidebarProvider>
                 <DocumentProvider documentId={documentId}>
-                <AppSidebar collapsible='offcanvas'/>
+                <AppSidebar collapsible='offcanvas' className='w-90'/>
 
             <main className="flex-1 overflow-auto">
                <Navbar />
