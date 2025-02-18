@@ -12,8 +12,8 @@ import { CodeBlock } from "./blocks/code-block"
 import { BulletListBlock } from "./blocks/bullet-list-block"
 import { NumberedListBlock } from "./blocks/numbered-list-block"
 import { GripVertical } from "lucide-react"
-import { saveDocument, serializeExistingDocument} from "@/lib/serializer";
-import {useDocument} from "@/context/document-context";
+import { saveDocument, serializeExistingDocument} from "@/lib/serializer"
+import { useDocument } from "@/context/document-context"
 
 type BlockType =
     | "text"
@@ -32,51 +32,54 @@ interface Block {
   content: string
   props?: Record<string, unknown>
 }
+
 interface BlockEditorProps {
   initialBlocks?: Block[]
   documentId: string
 }
+
 export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
-  const { document, updateDocument } = useDocument();
+  const { document, updateDocument } = useDocument()
   const [blocks, setBlocks] = useState<Block[]>([])
   const [isInitialized, setIsInitialized] = useState(false)
+  const blockRefs = useRef<{ [key: string]: HTMLTextAreaElement | null }>({})
+
   useEffect(() => {
     if (initialBlocks && !isInitialized) {
-      console.log('Inicializando bloques:', initialBlocks)
       setBlocks(initialBlocks)
       setIsInitialized(true)
     }
   }, [initialBlocks, isInitialized])
+
   useEffect(() => {
     if (document && isInitialized) {
-      setBlocks(document.blocks);
+      setBlocks(document.blocks)
     }
   }, [document, isInitialized])
+
   const handleBlockChange = (id: string, content: string) => {
-    const newBlocks = blocks.map((block) => (block.id === id ? { ...block, content } : block));
-    setBlocks(newBlocks);
+    const newBlocks = blocks.map((block) => (block.id === id ? { ...block, content } : block))
+    setBlocks(newBlocks)
 
-    if (!document) return;
+    if (!document) return
 
-    // Verificar si es el primer bloque y es heading-1
-    const changedBlock = newBlocks[0];
+    const changedBlock = newBlocks[0]
     if (changedBlock && changedBlock.id === id && changedBlock.type === "heading-1") {
-      // Actualizar tanto el título como los bloques
       updateDocument({
         ...document,
         title: content,
         blocks: newBlocks,
         lastModified: new Date().toISOString()
-      });
+      })
     } else {
-      // Solo actualizar los bloques
       updateDocument({
         ...document,
         blocks: newBlocks,
         lastModified: new Date().toISOString()
-      });
+      })
     }
-  };
+  }
+
   const [commandPalette, setCommandPalette] = useState({
     isOpen: false,
     position: { top: 0, left: 0 },
@@ -85,50 +88,47 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
   const [focusedBlockId, setFocusedBlockId] = useState<string | null>(null)
   const [selectedBlockIds, setSelectedBlockIds] = useState<string[]>([])
   const [lastSelectedBlockId, setLastSelectedBlockId] = useState<string | null>(null)
-  const blockRefs = useRef<{ [key: string]: HTMLElement | null }>({})
 
+  const focusBlock = (blockId: string | null) => {
+    if (!blockId) return
 
+    const element = blockRefs.current[blockId]
+    const block = blocks.find(b => b.id === blockId)
 
-
-    useEffect(() => {
-      if (!blocks.length) return;
-
-      const autoSave = () => {
-        try {
-          const document = serializeExistingDocument(blocks, documentId);
-          console.log('Guardando documento con ID:', documentId);
-          saveDocument(document);
-        } catch (error) {
-          console.error('Error autosaving:', error);
-        }
-      };
-
-      // Crear un timer debounced para el autoguardado
-      const timer = setTimeout(autoSave, 1000);
-
-      // Limpiar el timer si los bloques cambian antes de que se ejecute
-      return () => clearTimeout(timer);
-    }, [blocks, documentId]);
-  useEffect(() => {
-    // Solo ejecutar en el cliente
-    if (typeof window === 'undefined') return;
-
-    if (focusedBlockId) {
-      const element = blockRefs.current[focusedBlockId]
-      if (element) {
-        // Usar setTimeout para asegurar que el DOM está listo
-        setTimeout(() => {
-          element.focus()
-          if ("setSelectionRange" in element) {
-            const len = (element as HTMLInputElement).value.length
-            ;(element as HTMLInputElement).setSelectionRange(len, len)
-          }
-        }, 0)
+    if (element && block) {
+      // Solo manipular el cursor para bloques editables de texto
+      if (["text", "heading-1", "heading-2", "heading-3", "bullet-list", "numbered-list", "todo"].includes(block.type)) {
+        element.focus()
+        const len = element.value.length
+        element.setSelectionRange(len, len)
+      } else if (block.type === "image" || block.type === "code") {
+        // Para bloques especiales solo enfocamos sin manipular el cursor
+        element.focus()
       }
     }
+  }
+
+  useEffect(() => {
+    if (!blocks.length) return
+
+    const autoSave = () => {
+      try {
+        const document = serializeExistingDocument(blocks, documentId)
+        saveDocument(document)
+      } catch (error) {
+        console.error('Error autosaving:', error)
+      }
+    }
+
+    const timer = setTimeout(autoSave, 1000)
+    return () => clearTimeout(timer)
+  }, [blocks, documentId])
+
+  useEffect(() => {
+    if (focusedBlockId) {
+      focusBlock(focusedBlockId)
+    }
   }, [focusedBlockId])
-
-
 
   const createNewBlock = (currentBlockId: string, newBlockType: BlockType = "text", isNewPage = false) => {
     const currentBlockIndex = blocks.findIndex((b) => b.id === currentBlockId)
@@ -159,26 +159,35 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
     setSelectedBlockIds([])
   }
 
-  // const [lastEnterPress, setLastEnterPress] = useState<{ blockId: string; timestamp: number } | null>(null)
-    const navigateBlocks = (currentBlockId: string, direction: 'up' | 'down') => {
-        const currentIndex = blocks.findIndex(b => b.id === currentBlockId);
-        if (currentIndex === -1) return;
+  const navigateBlocks = (currentBlockId: string, direction: 'up' | 'down') => {
+    const currentIndex = blocks.findIndex(b => b.id === currentBlockId)
+    if (currentIndex === -1) return
 
-        const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-        if (newIndex >= 0 && newIndex < blocks.length) {
-            setFocusedBlockId(blocks[newIndex].id);
-        }
-    };
+    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
+    if (newIndex >= 0 && newIndex < blocks.length) {
+      const targetBlockId = blocks[newIndex].id
+      setFocusedBlockId(targetBlockId)
+      focusBlock(targetBlockId)
+    }
+  }
+
   const handleKeyDown = (e: React.KeyboardEvent, blockId: string) => {
     const block = blocks.find((b) => b.id === blockId)
     if (!block) return
-// Manejo de flechas arriba/abajo
+
     if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-      e.preventDefault();
-      const direction = e.key === 'ArrowUp' ? 'up' : 'down';
-      navigateBlocks(blockId, direction);
-      return;
+      const textArea = e.target as HTMLTextAreaElement
+      const isAtStart = textArea.selectionStart === 0
+      const isAtEnd = textArea.selectionEnd === textArea.value.length
+
+      if ((e.key === 'ArrowUp' && isAtStart) || (e.key === 'ArrowDown' && isAtEnd)) {
+        e.preventDefault()
+        const direction = e.key === 'ArrowUp' ? 'up' : 'down'
+        navigateBlocks(blockId, direction)
+      }
+      return
     }
+
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
 
@@ -189,7 +198,6 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
 
       const isListBlock = ["bullet-list", "numbered-list", "todo"].includes(block.type)
 
-      // Si es un bloque de lista vacío, convertirlo a texto
       if (isListBlock && block.content.trim() === "") {
         setBlocks(blocks.map(b =>
             b.id === blockId ? { ...b, type: "text" as BlockType } : b
@@ -197,7 +205,6 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
         return
       }
 
-      // Crear nuevo bloque manteniendo el tipo si tiene contenido
       const newBlockType = (isListBlock && block.content.trim() !== "") ? block.type : "text"
       createNewBlock(blockId, newBlockType, false)
     }
@@ -274,7 +281,6 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
       })
       setLastSelectedBlockId(blockId)
     } else {
-      // Si no hay teclas modificadoras, selecciona solo este bloque
       setSelectedBlockIds([blockId])
       setLastSelectedBlockId(blockId)
     }
@@ -286,19 +292,12 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
     const items = Array.from(blocks)
 
     if (selectedBlockIds.length > 1 && selectedBlockIds.includes(result.draggableId)) {
-      // Mover múltiples bloques
       const selectedBlocks = items.filter(block => selectedBlockIds.includes(block.id))
       const otherBlocks = items.filter(block => !selectedBlockIds.includes(block.id))
-
-      // Remover los bloques seleccionados
       const insertIndex = result.destination.index
-
-      // Insertar los bloques seleccionados en la nueva posición
       otherBlocks.splice(insertIndex, 0, ...selectedBlocks)
-
       setBlocks(otherBlocks)
     } else {
-      // Mover un solo bloque
       const [reorderedItem] = items.splice(result.source.index, 1)
       items.splice(result.destination.index, 0, reorderedItem)
       setBlocks(items)
@@ -307,20 +306,27 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
     setSelectedBlockIds([])
   }
 
+  const handleBlockDelete = (blockId: string) => {
+    setBlocks(blocks.filter(b => b.id !== blockId))
+    setSelectedBlockIds(selectedBlockIds.filter(id => id !== blockId))
+    if (focusedBlockId === blockId) {
+      setFocusedBlockId(null)
+    }
+  }
+
   const renderBlock = (block: Block, index: number) => {
     const commonProps = {
       id: `block-${block.id}`,
       content: block.content,
       onChange: (content: string) => handleBlockChange(block.id, content),
       onKeyDown: (e: React.KeyboardEvent) => handleKeyDown(e, block.id),
-      textareaRef: (el: HTMLTextAreaElement | null) => {
-        blockRefs.current[block.id] = el;
+      ref: (el: HTMLTextAreaElement | null) => {
+        blockRefs.current[block.id] = el
       },
       onFocus: () => setFocusedBlockId(block.id),
       onAddBlockAfter: () => createNewBlock(block.id, "text", false),
       onDelete: () => handleBlockDelete(block.id),
       ...block.props,
-
     }
 
     const getBlockContent = () => {
@@ -349,8 +355,8 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
       }
     }
 
-    // Verifica si es el primer bloque y es un heading-1 (título de la página)
     const isPageTitle = index === 0 && block.type === "heading-1"
+    const isSelected = selectedBlockIds.includes(block.id)
 
     if (isPageTitle) {
       return (
@@ -359,21 +365,12 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
           </div>
       )
     }
-    const handleBlockDelete = (blockId: string) => {
-      setBlocks(blocks.filter(b => b.id !== blockId))
-      setSelectedBlockIds(selectedBlockIds.filter(id => id !== blockId))
-      if (focusedBlockId === blockId) {
-        setFocusedBlockId(null)
-      }
-    }
-    const isSelected = selectedBlockIds.includes(block.id)
+
     return (
         <Draggable key={block.id} draggableId={block.id} index={index}>
           {(provided, snapshot) => (
-              <div key={'my'}
-                  ref={(el) => {
-                    provided.innerRef(el as HTMLDivElement);
-                  }}
+              <div
+                  ref={provided.innerRef}
                   {...provided.draggableProps}
                   onClick={(e) => handleBlockClick(e, block.id)}
                   className={`group relative flex gap-2 items-start rounded-lg -ml-10 pl-10 
@@ -381,7 +378,7 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
               ${isSelected ? "bg-blue-50 dark:bg-blue-900/20" : "hover:bg-gray-50 dark:hover:bg-gray-800/50"}
             `}
               >
-                <div key={'other'}
+                <div
                     {...provided.dragHandleProps}
                     className="absolute left-2 top-1.5 opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing"
                 >
@@ -392,31 +389,23 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
           )}
         </Draggable>
     )
-
   }
 
-/*  const handleDocumentLoad = (newBlocks: Block[]) => {
-    setBlocks(newBlocks);
-    setFocusedBlockId(null);
-    setSelectedBlockIds([]);
-  };*/
   return (
-      <DragDropContext onDragEnd={handleDragEnd} >
+      <DragDropContext onDragEnd={handleDragEnd}>
         <div className="max-w-4xl mx-auto p-8">
-
-          <Droppable droppableId="blocks" key="droppable-blocks">
+          <Droppable droppableId="blocks">
             {(provided) => (
-                <div key="droppable-container"
-                     {...provided.droppableProps}
+                <div
+                    {...provided.droppableProps}
                     ref={provided.innerRef}
                     className="min-h-[70vh] relative space-y-1"
                 >
                   {blocks.map((block, index) => renderBlock(block, index))}
                   {provided.placeholder}
 
-                  {/* Área cliqueable al final */}
-                  <div   key="clickable-area"
-                         className="min-h-32 relative cursor-text"
+                  <div
+                      className="min-h-32 relative cursor-text"
                       onClick={() => {
                         if (blocks.length > 0) {
                           const lastBlock = blocks[blocks.length - 1];
@@ -425,7 +414,7 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
                       }}
                   >
                     {blocks.length === 0 && (
-                        <div key={'x'} className="absolute inset-0 flex items-center justify-center text-gray-400 dark:text-gray-600">
+                        <div className="absolute inset-0 flex items-center justify-center text-gray-400 dark:text-gray-600">
                           Haz clic en cualquier lugar para comenzar a escribir
                         </div>
                     )}
