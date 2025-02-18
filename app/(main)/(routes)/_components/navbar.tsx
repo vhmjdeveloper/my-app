@@ -8,14 +8,12 @@ export function Navbar() {
     const { state, isMobile } = useSidebar();
 
     return (
-        <>
-            <nav className="flex flex-row items-center justify-between p-1 border-b dark:border-gray-700">
-                {(state === 'collapsed' || isMobile) && (
-                    <SidebarTrigger variant="navbar" />
-                )}
-                <DocumentTitle />
-                <DarkModeToggle />
-            </nav>
-        </>
+        <nav className="sticky top-0 z-10 flex flex-row items-center justify-between p-1 border-b dark:border-gray-700 bg-white dark:bg-gray-900">
+            {(state === 'collapsed' || isMobile) && (
+                <SidebarTrigger variant="navbar" />
+            )}
+            <DocumentTitle />
+            <DarkModeToggle />
+        </nav>
     );
 }

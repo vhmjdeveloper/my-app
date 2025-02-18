@@ -19,12 +19,15 @@ export default function MainLayout({
         <div className="flex h-screen bg-white dark:bg-gray-900">
             <SidebarProvider>
                 <DocumentProvider documentId={documentId}>
-                <AppSidebar collapsible='offcanvas' className='w-90'/>
-
-            <main className="flex-1 overflow-auto">
-               <Navbar />
-                {children}
-            </main>
+                    <div className="z-20">
+                        <AppSidebar collapsible='offcanvas'/>
+                    </div>
+                    <div className="flex-1 flex flex-col">
+                        <Navbar />
+                        <main className="flex-1 overflow-auto pt-8">
+                            {children}
+                        </main>
+                    </div>
                 </DocumentProvider>
             </SidebarProvider>
         </div>
