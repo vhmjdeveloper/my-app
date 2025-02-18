@@ -1,35 +1,25 @@
 import {Block, Document} from "@/lib/types";
 
+const isClient = typeof window !== 'undefined';
+function isValidJSON(str: string): boolean {
+    if (!str || str.trim() === '') return false;
+    try {
+        JSON.parse(str);
+        return true;
+    } catch (e) {
+        console.error("errorss",e)
+        return false;
+    }
+}
 export function serializeDocument(blocks: Block[]): Document {
-    // Obtener el título del primer bloque heading-1 o usar uno por defecto
     const titleBlock = blocks.find(block => block.type === "heading-1");
-    const title = titleBlock?.content || "Untitled";
-
+    const title = titleBlock?.content || "Sin título";
     const now = new Date().toISOString();
 
     return {
         id: generateDocumentId(),
         title,
-        blocks: blocks.map(block => {
-            // Para bloques de imagen, convertimos el contenido a base64 si es necesario
-            if (block.type === "image") {
-                try {
-                    const imageData = JSON.parse(block.content);
-                    if (imageData.url && imageData.url.startsWith('data:')) {
-                        // Ya está en base64, lo dejamos como está
-                        return block;
-                    } else if (imageData.url) {
-                        // Si es una URL externa, la mantenemos como está
-                        return block;
-                    }
-                } catch (e) {
-                    // Si no es JSON válido, lo dejamos como está
-                    console.error(e)
-                    return block;
-                }
-            }
-            return block;
-        }),
+        blocks: processBlocks(blocks),
         lastModified: now,
         created: now,
     };
@@ -51,14 +41,14 @@ export function serializeNewDocument(blocks: Block[]): Document {
 // Nueva función para serializar un documento existente
 export function serializeExistingDocument(blocks: Block[], documentId: string): Document {
     const titleBlock = blocks.find(block => block.type === "heading-1");
-    const title = titleBlock?.content || "Untitled";
+    const title = titleBlock?.content || "Sin título";
 
     return {
         id: documentId,
         title,
         blocks: processBlocks(blocks),
         lastModified: new Date().toISOString(),
-        created: new Date().toISOString(), // Esta será reemplazada por la fecha original en saveDocument
+        created: new Date().toISOString(),
     };
 }
 
@@ -66,17 +56,32 @@ export function serializeExistingDocument(blocks: Block[], documentId: string): 
 function processBlocks(blocks: Block[]): Block[] {
     return blocks.map(block => {
         if (block.type === "image") {
-            try {
-                const imageData = JSON.parse(block.content);
-                if (imageData.url && imageData.url.startsWith('data:')) {
-                    return block;
-                } else if (imageData.url) {
-                    return block;
-                }
-            } catch (e) {
-                console.error(e)
-                return block;
+            // Si el contenido está vacío, inicializamos con un objeto JSON válido
+            if (!block.content || block.content.trim() === '') {
+                return {
+                    ...block,
+                    content: JSON.stringify({
+                        url: '',
+                        width: 100,
+                        showCaption: false
+                    })
+                };
             }
+
+            // Si el contenido no es JSON válido, lo envolvemos en un objeto
+            if (!isValidJSON(block.content)) {
+                return {
+                    ...block,
+                    content: JSON.stringify({
+                        url: block.content,
+                        width: 100,
+                        showCaption: false
+                    })
+                };
+            }
+
+            // Si es JSON válido, lo dejamos como está
+            return block;
         }
         return block;
     });
@@ -104,15 +109,15 @@ function generateDocumentId(): string {
 
 // Función para guardar el documento en localStorage
 export function saveDocument(document: Document): void {
+    if (!isClient) return;
+
     try {
         const documents = loadAllDocuments();
 
-        // Si el documento ya existe, preservar su fecha de creación
         if (documents[document.id]) {
             document.created = documents[document.id].created;
         }
 
-        // Actualizar o agregar el documento
         documents[document.id] = {
             ...document,
             lastModified: new Date().toISOString()
@@ -126,8 +131,11 @@ export function saveDocument(document: Document): void {
     }
 }
 
-// Función para cargar todos los documentos
+
+// Función para cargar un documento específico
 export function loadAllDocuments(): Record<string, Document> {
+    if (!isClient) return {};
+
     try {
         const documentsJson = localStorage.getItem('documents');
         return documentsJson ? JSON.parse(documentsJson) : {};
@@ -137,8 +145,9 @@ export function loadAllDocuments(): Record<string, Document> {
     }
 }
 
-// Función para cargar un documento específico
 export function loadDocument(id: string): Document | null {
+    if (!isClient) return null;
+
     try {
         const documents = loadAllDocuments();
         return documents[id] || null;
@@ -148,8 +157,9 @@ export function loadDocument(id: string): Document | null {
     }
 }
 
-// Función para eliminar un documento
 export function deleteDocument(id: string): void {
+    if (!isClient) return;
+
     try {
         const documents = loadAllDocuments();
         delete documents[id];

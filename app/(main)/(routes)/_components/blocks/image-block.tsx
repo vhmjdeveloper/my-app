@@ -60,7 +60,7 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
         const [error, setError] = useState<string | null>(null)
         const captionRef = useRef<HTMLTextAreaElement>(null)
         const containerRef = useRef<HTMLDivElement>(null)
-
+        const resizeTimeoutRef = useRef<NodeJS.Timeout>()
         const handleImageSelect = useCallback(
             (file: File | null, imageUrl?: string) => {
                 if (file) {
@@ -105,13 +105,12 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
         }, [])
 
         const handleCaptionChange = useCallback((event: React.ChangeEvent<HTMLTextAreaElement>) => {
-            const newCaption = event.target.value
             const newImageData = {
                 ...imageData,
-                caption: newCaption
+                caption: event.target.value
             }
             setImageData(newImageData)
-            onChange(serializeImageContent(newImageData))
+            onChange(JSON.stringify(newImageData))
         }, [imageData, onChange])
 
         const handleCaptionVisibility = useCallback(() => {
@@ -121,7 +120,7 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
                 caption: !imageData.showCaption ? (imageData.caption || "") : imageData.caption
             }
             setImageData(newImageData)
-            onChange(serializeImageContent(newImageData))
+            onChange(JSON.stringify(newImageData))
         }, [imageData, onChange])
 
         const handleCaptionKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -133,19 +132,28 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
             }
         }
 
-        const handleResize = useCallback((e: MouseEvent | TouchEvent, direction: string, ref: HTMLElement) => {
-            const containerWidth = containerRef.current?.offsetWidth || 100
-            const newWidth = (ref.offsetWidth / containerWidth) * 100
-            const newImageData = {
-                ...imageData,
-                width: Math.min(Math.max(newWidth, 20), 200)
-            }
-            setImageData(newImageData)
-            onChange(serializeImageContent(newImageData))
 
-            // Verificar el tamaño después del redimensionado
-            const currentWidth = ref.offsetWidth
-            setIsSmallImage(currentWidth < 400)
+        const handleResize = useCallback((e: MouseEvent | TouchEvent, direction: string, ref: HTMLElement) => {
+            if (resizeTimeoutRef.current) {
+                clearTimeout(resizeTimeoutRef.current)
+            }
+
+            resizeTimeoutRef.current = setTimeout(() => {
+                const containerWidth = containerRef.current?.offsetWidth || 100
+                const newWidth = (ref.offsetWidth / containerWidth) * 100
+                const clampedWidth = Math.min(Math.max(newWidth, 20), 200)
+
+                if (clampedWidth !== imageData.width) {
+                    const newImageData = {
+                        ...imageData,
+                        width: clampedWidth
+                    }
+                    setImageData(newImageData)
+                    onChange(JSON.stringify(newImageData))
+                }
+
+                setIsSmallImage(ref.offsetWidth < 400)
+            }, 16) // Throttle to ~60fps
         }, [imageData, onChange])
 
         useEffect(() => {
@@ -242,7 +250,9 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
                     } else if (ref) {
                         ref.current = el
                     }
-                    (containerRef as React.MutableRefObject<HTMLElement | null>).current = el
+                    if (containerRef.current !== el) {
+                        (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = el
+                    }
                 }}
                 tabIndex={0}
                 onFocus={onFocus}
@@ -296,13 +306,17 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
                                     }}
                                     handleComponent={{
                                         left: (
-                                            <div className="absolute inset-y-0 left-0 w-6 group-hover:bg-blue-500/10 transition-colors">
-                                                <div className="absolute left-2 top-1/2 -translate-y-1/2 w-0.5 h-12 bg-blue-500 rounded-full opacity-0 group-hover:opacity-75 transition-opacity" />
+                                            <div
+                                                className="absolute inset-y-0 left-0 w-6 group-hover:bg-blue-500/10 transition-colors">
+                                                <div
+                                                    className="absolute left-2 top-1/2 -translate-y-1/2 w-0.5 h-12 bg-blue-500 rounded-full opacity-0 group-hover:opacity-75 transition-opacity"/>
                                             </div>
                                         ),
                                         right: (
-                                            <div className="absolute inset-y-0 right-0 w-6 group-hover:bg-blue-500/10 transition-colors">
-                                                <div className="absolute right-2 top-1/2 -translate-y-1/2 w-0.5 h-12 bg-blue-500 rounded-full opacity-0 group-hover:opacity-75 transition-opacity" />
+                                            <div
+                                                className="absolute inset-y-0 right-0 w-6 group-hover:bg-blue-500/10 transition-colors">
+                                                <div
+                                                    className="absolute right-2 top-1/2 -translate-y-1/2 w-0.5 h-12 bg-blue-500 rounded-full opacity-0 group-hover:opacity-75 transition-opacity"/>
                                             </div>
                                         )
                                     }}
@@ -317,8 +331,9 @@ export const ImageBlock = forwardRef<HTMLDivElement, ImageBlockProps>(
                                             height={1000 * aspectRatio}
                                             onLoad={handleImageLoad}
                                         />
-                                        <div className="absolute top-2 right-2 z-20 opacity-0 group-hover/image:opacity-100 transition-opacity">
-                                            <ImageMenu />
+                                        <div
+                                            className="absolute top-2 right-2 z-20 opacity-0 group-hover/image:opacity-100 transition-opacity">
+                                            <ImageMenu/>
                                         </div>
                                     </div>
                                 </Resizable>
