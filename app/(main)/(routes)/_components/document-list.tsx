@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useDocument } from "@/context/document-context";
 import { DocumentItem } from "./document-item";
 import { DocumentTitle } from "./document-title";
+import {deleteParentDocument, deleteSubdocument} from "@/lib/operation-utils";
 
 export function DocumentList() {
     const [documents, setDocuments] = useState<Record<string, Document>>({});
@@ -48,8 +49,29 @@ export function DocumentList() {
     };
 
     const handleDeleteDocument = (docId: string) => {
-        if (confirm("¿Estás seguro de que deseas eliminar este documento?")) {
-            deleteDocument(docId);
+        const documents = loadAllDocuments();
+        const doc = documents[docId];
+
+        if (!doc) return;
+
+        const isSubdocument = !!doc.parentId;
+        const message = isSubdocument
+            ? "¿Estás seguro de que deseas eliminar este subdocumento?"
+            : "¿Estás seguro de que deseas eliminar este documento y todos sus subdocumentos?";
+
+        if (confirm(message)) {
+            const nextDocId = isSubdocument
+                ? deleteSubdocument(docId)
+                : deleteParentDocument(docId);
+
+            if (nextDocId) {
+                router.push(`/documents/${nextDocId}`);
+            } else {
+                // Si no hay más documentos, crear uno nuevo
+                const newDocId = 'doc_' + Date.now().toString(36);
+                router.push(`/documents/${newDocId}`);
+            }
+
             loadAndSortDocuments();
         }
     };
