@@ -1,10 +1,8 @@
 "use client"
-
 import { useEffect, useState } from "react"
-
 import { loadDocument, saveDocument } from "@/lib/serializer"
 import { Block } from "@/lib/types"
-import {BlockEditor} from "@/app/(main)/(routes)/_components/BlockEditor";
+import { BlockEditor } from "@/app/(main)/(routes)/_components/BlockEditor"
 
 interface DocumentPageProps {
     params: {
@@ -19,16 +17,13 @@ export default function DocumentsIdPage({ params }: DocumentPageProps) {
     useEffect(() => {
         const loadDocumentData = () => {
             setIsLoading(true)
-            console.log('Intentando cargar documento:', params.documentId)
 
             const doc = loadDocument(params.documentId)
-            console.log('Documento cargado:', doc)
 
             if (doc) {
-                console.log('Estableciendo bloques del documento:', doc.blocks)
                 setBlocks(doc.blocks)
             } else {
-                console.log('Creando nuevo documento')
+                // Crear un nuevo documento con bloques iniciales
                 const initialBlocks = [
                     {
                         id: "1",
@@ -42,16 +37,20 @@ export default function DocumentsIdPage({ params }: DocumentPageProps) {
                     }
                 ];
 
-                // Guardar el documento inicial con el título correcto
-                saveDocument({
+                // Guardar el nuevo documento
+                const newDocument = {
                     id: params.documentId,
                     title: "Nuevo Documento",
                     blocks: initialBlocks,
                     lastModified: new Date().toISOString(),
                     created: new Date().toISOString()
-                });
+                };
 
-                setBlocks(initialBlocks)
+                saveDocument(newDocument);
+                setBlocks(initialBlocks);
+
+                // Disparar evento de storage para actualizar otros componentes
+                window.dispatchEvent(new Event('storage'));
             }
             setIsLoading(false)
         }

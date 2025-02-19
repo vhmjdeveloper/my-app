@@ -19,18 +19,22 @@ export function DocumentList() {
     const router = useRouter();
     const { document: currentDocument } = useDocument();
 
-    // Cargar documentos inicialmente y escuchar cambios de storage
+    // Función para cargar documentos
+    const loadAndSortDocuments = () => {
+        const allDocs = loadAllDocuments();
+        const sortedDocs = Object.values(allDocs).sort(
+            (a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime()
+        );
+        setDocuments(sortedDocs);
+    };
+
+    // Cargar documentos inicialmente
     useEffect(() => {
-        const loadAndSortDocuments = () => {
-            const allDocs = loadAllDocuments();
-            const sortedDocs = Object.values(allDocs).sort(
-                (a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime()
-            );
-            setDocuments(sortedDocs);
-        };
-
         loadAndSortDocuments();
+    }, []);
 
+    // Escuchar cambios en localStorage
+    useEffect(() => {
         const handleStorageChange = (e: StorageEvent) => {
             if (e.key === "documents") {
                 loadAndSortDocuments();
@@ -41,17 +45,10 @@ export function DocumentList() {
         return () => window.removeEventListener("storage", handleStorageChange);
     }, []);
 
-    // Actualizar documento específico cuando cambia
+    // Actualizar cuando cambia el documento actual
     useEffect(() => {
         if (currentDocument) {
-            setDocuments(prev => {
-                const updatedDocs = prev.map(doc =>
-                    doc.id === currentDocument.id ? currentDocument : doc
-                );
-                return updatedDocs.sort((a, b) =>
-                    new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime()
-                );
-            });
+            loadAndSortDocuments(); // Recargar todos los documentos
         }
     }, [currentDocument?.title, currentDocument?.lastModified]);
 
@@ -63,6 +60,7 @@ export function DocumentList() {
         e.stopPropagation();
         if (confirm("¿Estás seguro de que deseas eliminar este documento?")) {
             deleteDocument(docId);
+            loadAndSortDocuments(); // Recargar la lista después de eliminar
 
             if (currentDocument?.id === docId) {
                 const remainingDocs = documents.filter(doc => doc.id !== docId);
@@ -73,21 +71,21 @@ export function DocumentList() {
                     router.push(`/documents/${newDocId}`);
                 }
             }
-
-            setDocuments(prev => prev.filter(doc => doc.id !== docId));
         }
     };
 
     const handleCreateNewDocument = () => {
         const newDocId = 'doc_' + Date.now().toString(36);
         router.push(`/documents/${newDocId}`);
+        // La lista se actualizará automáticamente cuando el documento se cree
+        // debido al efecto que escucha los cambios en localStorage
     };
 
     return (
         <div className="px-3 py-2">
             <div className="flex items-center justify-between mb-2 px-2">
                 <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-                    PÚBLICOS
+                    DOCUMENTOS
                 </h2>
                 <button
                     onClick={handleCreateNewDocument}
@@ -115,11 +113,12 @@ export function DocumentList() {
                                     isOpen={true}
                                     onOpenChange={(open) => {
                                         if (!open) setRenamingDoc(null);
+                                        loadAndSortDocuments(); // Recargar después de renombrar
                                     }}
                                 />
                             ) : (
                                 <span className="truncate block">
-                                    {doc.id === currentDocument?.id ? currentDocument.title : doc.title}
+                                    {doc.title}
                                 </span>
                             )}
                         </div>
