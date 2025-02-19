@@ -1,9 +1,9 @@
 import { useRef, useEffect } from 'react'
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd"
 import { useDocument } from "@/context/document-context"
-import { useBlockManagement } from '@/hooks/use-block-management'
-import { useBlockOperations } from '@/hooks/use-block-operations'
-import { useCommandPalette } from '@/hooks/use-command-palette'
+import { useBlockManagement } from '@/app/(main)/(routes)/_components/BlockEditor/hooks/use-block-management'
+import { useBlockOperations } from '@/app/(main)/(routes)/_components/BlockEditor/hooks/use-block-operations'
+import { useCommandPalette } from '@/app/(main)/(routes)/_components/BlockEditor/hooks/use-command-palette'
 import { EmptyBlockPlaceholder } from './empty-block-placeholder'
 import { CommandPalette } from './command-palette'
 import { Block, BlockType } from '@/lib/types'
@@ -16,6 +16,7 @@ import {ImageBlock} from "@/app/(main)/(routes)/_components/BlockEditor/blocks/i
 import {CodeBlock} from "@/app/(main)/(routes)/_components/BlockEditor/blocks/code-block";
 import {NumberedListBlock} from "@/app/(main)/(routes)/_components/BlockEditor/blocks/numbered-list-block";
 import {TextBlock} from "@/app/(main)/(routes)/_components/BlockEditor/blocks/text-block";
+import {SubdocumentBlock} from "@/app/(main)/(routes)/_components/BlockEditor/blocks/subdocument-block";
 
 interface BlockEditorProps {
     initialBlocks: Block[]
@@ -53,7 +54,8 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
         setBlocks,
         setFocusedBlockId,
         setSelectedBlockIds,
-        blockRefs
+        blockRefs,
+        documentId
     })
 
     const {
@@ -64,8 +66,9 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
     } = useCommandPalette({
         blocks,
         setBlocks,
-        setFocusedBlockId
-    })
+        setFocusedBlockId,
+        documentId  // Añadir el documentId aquí
+    });
 
     useEffect(() => {
         if (focusedBlockId) {
@@ -215,6 +218,8 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
                             index={blocks.filter((b) => b.type === "numbered-list").findIndex((b) => b.id === block.id) + 1}
                         />
                     )
+                case "subdocument":
+                    return <SubdocumentBlock {...commonProps} />;
                 default:
                     return <TextBlock {...commonProps} />
             }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { Command } from "cmdk"
-import { Type, Heading1, Heading2, Heading3, ListOrdered, List, Image, CheckSquare, Code } from "lucide-react"
+import { Type, Heading1, Heading2, Heading3, ListOrdered, List, Image, CheckSquare, Code, File } from "lucide-react"
 
 interface CommandPaletteProps {
   isOpen: boolean
@@ -68,6 +68,12 @@ const BLOCK_TYPES = [
     name: "Código",
     description: "Bloque de código con resaltado de sintaxis.",
     icon: Code,
+  },
+  {
+    id: "subdocument",
+    name: "Subdocumento",
+    description: "Crear un nuevo subdocumento anidado.",
+    icon: File, // Importar File de lucide-react
   },
 ]
 

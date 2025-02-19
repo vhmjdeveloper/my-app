@@ -13,7 +13,8 @@ export type BlockType =
     | "numbered-list"
     | "todo"
     | "image"
-    | "code";
+    | "code"
+| "subdocument";
 
 export interface Document {
     id: string;
@@ -21,4 +22,6 @@ export interface Document {
     blocks: Block[];
     lastModified: string;
     created: string;
+    parentId?: string;  // ID del documento padre, si es un subdocumento
+    subdocuments?: string[];  // Lista de IDs de subdocumentos
 }
