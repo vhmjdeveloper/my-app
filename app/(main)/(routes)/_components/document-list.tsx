@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import {useState, useEffect, useCallback} from "react";
 import { ScrollText, MoreHorizontal, Plus, Trash2, Pencil } from "lucide-react";
 import { loadAllDocuments, deleteDocument } from "@/lib/serializer";
 import { Document } from "@/lib/types";
@@ -20,13 +20,13 @@ export function DocumentList() {
     const { document: currentDocument } = useDocument();
 
     // Función para cargar documentos
-    const loadAndSortDocuments = () => {
+    const loadAndSortDocuments = useCallback(() => {
         const allDocs = loadAllDocuments();
         const sortedDocs = Object.values(allDocs).sort(
             (a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime()
         );
         setDocuments(sortedDocs);
-    };
+    }, []);
 
     // Cargar documentos inicialmente
     useEffect(() => {
