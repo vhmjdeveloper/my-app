@@ -1,9 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { BlockEditor } from "../../_components/block-editor"
+
 import { loadDocument, saveDocument } from "@/lib/serializer"
 import { Block } from "@/lib/types"
+import {BlockEditor} from "@/app/(main)/(routes)/_components/BlockEditor";
 
 interface DocumentPageProps {
     params: {
