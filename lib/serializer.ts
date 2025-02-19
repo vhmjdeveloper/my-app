@@ -114,17 +114,31 @@ export function saveDocument(document: Document): void {
     try {
         const documents = loadAllDocuments();
 
+        // Si el documento ya existe, preservar sus subdocumentos y parentId
         if (documents[document.id]) {
-            document.created = documents[document.id].created;
+            document.subdocuments = documents[document.id].subdocuments || document.subdocuments;
+            document.parentId = documents[document.id].parentId || document.parentId;
         }
 
+        // Actualizar el documento
         documents[document.id] = {
             ...document,
             lastModified: new Date().toISOString()
         };
 
+        // Si este documento es un subdocumento, asegurarnos de que el padre lo mantenga en su lista
+        if (document.parentId && documents[document.parentId]) {
+            const parentDoc = documents[document.parentId];
+            if (!parentDoc.subdocuments) {
+                parentDoc.subdocuments = [];
+            }
+            if (!parentDoc.subdocuments.includes(document.id)) {
+                parentDoc.subdocuments.push(document.id);
+            }
+            documents[document.parentId] = parentDoc;
+        }
+
         localStorage.setItem('documents', JSON.stringify(documents));
-        console.log('Documento guardado:', documents[document.id]);
     } catch (e) {
         console.error('Error saving document:', e);
         throw new Error('Failed to save document');
