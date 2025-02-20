@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ScrollText, MoreHorizontal, Trash2, Pencil, ChevronRight, ChevronDown } from "lucide-react";
 import { Document } from "@/lib/types";
 import { useRouter } from "next/navigation";
@@ -29,7 +29,9 @@ export const DocumentItem = ({
                              }: DocumentItemProps) => {
     const router = useRouter();
     const [isExpanded, setIsExpanded] = useState(true);
-    const hasSubdocuments = document.subdocuments && document.subdocuments.length > 0;
+    const [showEmptyMessage, setShowEmptyMessage] = useState(false);
+    const [subdocumentCount, setSubdocumentCount] = useState(document.subdocuments?.length || 0);
+    const hasSubdocuments = subdocumentCount > 0;
 
     const handleClick = () => {
         router.push(`/documents/${document.id}`);
@@ -39,6 +41,12 @@ export const DocumentItem = ({
         e.stopPropagation();
         setIsExpanded(!isExpanded);
     };
+
+    // Effect para actualizar el contador de subdocumentos cuando cambia el documento
+    useEffect(() => {
+        const validSubdocuments = document.subdocuments?.filter(id => documents[id]) || [];
+        setSubdocumentCount(validSubdocuments.length);
+    }, [document.subdocuments, documents]);
 
     const subdocuments = document.subdocuments?.map(id => documents[id]).filter(Boolean) || [];
 
@@ -53,10 +61,7 @@ export const DocumentItem = ({
             >
                 <button
                     onClick={handleExpandToggle}
-                    className={cn(
-                        "h-6 w-6 flex items-center justify-center",
-                        !hasSubdocuments && "invisible"
-                    )}
+                    className="h-6 w-6 flex items-center justify-center"
                 >
                     {isExpanded ? (
                         <ChevronDown className="h-4 w-4 text-gray-500" />
@@ -114,6 +119,11 @@ export const DocumentItem = ({
                             documents={documents}
                         />
                     ))}
+                </div>
+            )}
+            {isExpanded && !hasSubdocuments && (
+                <div className="ml-14 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    No contiene páginas
                 </div>
             )}
         </div>
