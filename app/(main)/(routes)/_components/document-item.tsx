@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ScrollText, MoreHorizontal, Trash2, Pencil, ChevronRight, ChevronDown } from "lucide-react";
+import {ScrollText, MoreHorizontal, Trash2, Pencil, ChevronRight, ChevronDown, Plus} from "lucide-react";
 import { Document } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import {
@@ -29,7 +29,7 @@ export const DocumentItem = ({
                              }: DocumentItemProps) => {
     const router = useRouter();
     const [isExpanded, setIsExpanded] = useState(true);
-    const [showEmptyMessage, setShowEmptyMessage] = useState(false);
+  //  const [showEmptyMessage, setShowEmptyMessage] = useState(false);
     const [subdocumentCount, setSubdocumentCount] = useState(document.subdocuments?.length || 0);
     const hasSubdocuments = subdocumentCount > 0;
 
@@ -76,43 +76,52 @@ export const DocumentItem = ({
                     <ScrollText className="h-4 w-4 text-gray-500 dark:text-gray-400 shrink-0" />
                     <span className="truncate">{document.title}</span>
                 </div>
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <button className="h-6 w-6 p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-gray-200 dark:hover:bg-gray-700">
-                            <MoreHorizontal className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                        </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onRename(document.id);
-                            }}
-                            className="flex items-center text-gray-700 dark:text-gray-300"
-                        >
-                            <Pencil className="h-4 w-4 mr-2" />
-                            Renombrar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onDelete(document.id);
-                            }}
-                            className="flex items-center text-red-600 dark:text-red-400"
-                        >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Eliminar
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </div>
-            {isExpanded && hasSubdocuments && (
-                <div className="flex flex-col">
-                    {subdocuments.map(subdoc => (
-                        <DocumentItem
-                            key={subdoc.id}
-                            document={subdoc}
-                            level={level + 1}
+                <div className="group/item">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                            <button
+                                className="h-6 w-6 p-1 rounded-md opacity-0 group-hover/item:opacity-100 hover:bg-gray-200 dark:hover:bg-gray-700">
+                                <MoreHorizontal className="h-4 w-4 text-gray-500 dark:text-gray-400"/>
+                            </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onRename(document.id);
+                                }}
+                                className="flex items-center text-gray-700 dark:text-gray-300"
+                            >
+                                <Pencil className="h-4 w-4 mr-2"/>
+                                Renombrar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDelete(document.id);
+                                }}
+                                className="flex items-center text-red-600 dark:text-red-400"
+                            >
+                                <Trash2 className="h-4 w-4 mr-2"/>
+                                Eliminar
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                    <button
+                        onClick={() => {
+                        }}
+                        className="h-6 w-6 p-1 rounded-md opacity-0 group-hover/item:opacity-100 hover:bg-gray-200 dark:hover:bg-gray-700">
+                        <Plus className="h-4 w-4 text-gray-500 dark:text-gray-400"/>
+                    </button>
+                </div>
+                </div>
+                {isExpanded && hasSubdocuments && (
+                    <div className="flex flex-col">
+                        {subdocuments.map(subdoc => (
+                            <DocumentItem
+                                key={subdoc.id}
+                                document={subdoc}
+                                level={level + 1}
                             currentDocumentId={currentDocumentId}
                             onDelete={onDelete}
                             onRename={onRename}

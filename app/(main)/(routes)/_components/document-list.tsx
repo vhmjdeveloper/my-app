@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Plus } from "lucide-react";
+
 import { loadAllDocuments, deleteDocument } from "@/lib/serializer";
 import { Document } from "@/lib/types";
 import { useRouter } from "next/navigation";
@@ -41,12 +41,6 @@ export function DocumentList() {
         return () => window.removeEventListener("storage", handleStorageChange);
     }, [loadAndSortDocuments]);
 
-    const handleCreateNewDocument = () => {
-        const newDocId = 'doc_' + Date.now().toString(36);
-        router.push(`/documents/${newDocId}`);
-        // Forzar actualización inmediata de la lista
-        setTimeout(loadAndSortDocuments, 100);
-    };
 
     const handleDeleteDocument = (docId: string) => {
         const documents = loadAllDocuments();
@@ -95,12 +89,7 @@ export function DocumentList() {
                 <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400">
                     DOCUMENTOS
                 </h2>
-                <button
-                    onClick={handleCreateNewDocument}
-                    className="h-6 w-6 p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
-                >
-                    <Plus className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                </button>
+
             </div>
             <div className="space-y-1">
                 {rootDocuments.map((doc) => (
