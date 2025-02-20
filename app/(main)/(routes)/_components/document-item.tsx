@@ -29,7 +29,7 @@ export const DocumentItem = ({
                                  documents
                              }: DocumentItemProps) => {
     const router = useRouter();
-    const [isExpanded, setIsExpanded] = useState(true);
+    const [isExpanded, setIsExpanded] = useState(false);
     const [subdocumentCount, setSubdocumentCount] = useState(document.subdocuments?.length || 0);
     const hasSubdocuments = subdocumentCount > 0;
 
