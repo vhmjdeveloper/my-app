@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react'
-import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd"
+import {DragDropContext, Droppable, Draggable, DropResult, DraggableProvidedDragHandleProps} from "@hello-pangea/dnd"
 import { useDocument } from "@/context/document-context"
 import { useBlockManagement } from '@/app/(main)/(routes)/_components/BlockEditor/hooks/use-block-management'
 import { useBlockOperations } from '@/app/(main)/(routes)/_components/BlockEditor/hooks/use-block-operations'
@@ -246,14 +246,14 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         onClick={(e) => handleBlockClick(e, block.id)}
-                        className={`group relative flex gap-2 items-start rounded-lg -ml-10 pl-10 
-          ${snapshot.isDragging ? "opacity-50" : ""}
-          ${isSelected ? "bg-blue-50 dark:bg-blue-900/20" : "hover:bg-gray-50 dark:hover:bg-gray-800/50"}
-        `}
+                        className={`group relative flex gap-2 items-start rounded-lg pl-16 
+        ${snapshot.isDragging ? "opacity-50" : ""}
+        ${isSelected ? "bg-blue-50 dark:bg-blue-900/20" : "hover:bg-gray-50 dark:hover:bg-gray-800/50"}
+    `}
                     >
                         <BlockMenu
                             onDelete={() => handleBlockDelete(block.id)}
-                            dragHandleProps={provided.dragHandleProps}
+                            dragHandleProps={provided.dragHandleProps as DraggableProvidedDragHandleProps}
                         />
                         {getBlockContent()}
                     </div>
