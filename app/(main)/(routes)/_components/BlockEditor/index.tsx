@@ -8,7 +8,6 @@ import { EmptyBlockPlaceholder } from './empty-block-placeholder'
 import { CommandPalette } from './command-palette'
 import { Block, BlockType } from '@/lib/types'
 
-import { GripVertical } from "lucide-react"
 import { HeadingBlock } from "@/app/(main)/(routes)/_components/BlockEditor/blocks/heading-block";
 import { TodoBlock } from "@/app/(main)/(routes)/_components/BlockEditor/blocks/todo-block";
 import { BulletListBlock } from "@/app/(main)/(routes)/_components/BlockEditor/blocks/bullet-list-block";
@@ -18,6 +17,7 @@ import { NumberedListBlock } from "@/app/(main)/(routes)/_components/BlockEditor
 import { TextBlock } from "@/app/(main)/(routes)/_components/BlockEditor/blocks/text-block";
 import { SubdocumentBlock } from "@/app/(main)/(routes)/_components/BlockEditor/blocks/subdocument-block";
 import TableBlock from "@/app/(main)/(routes)/_components/BlockEditor/blocks/table-block";
+import BlockMenu from "@/app/(main)/(routes)/_components/BlockEditor/block-menu";
 
 interface BlockEditorProps {
     initialBlocks: Block[]
@@ -247,16 +247,14 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
                         {...provided.draggableProps}
                         onClick={(e) => handleBlockClick(e, block.id)}
                         className={`group relative flex gap-2 items-start rounded-lg -ml-10 pl-10 
-              ${snapshot.isDragging ? "opacity-50" : ""}
-              ${isSelected ? "bg-blue-50 dark:bg-blue-900/20" : "hover:bg-gray-50 dark:hover:bg-gray-800/50"}
-            `}
+          ${snapshot.isDragging ? "opacity-50" : ""}
+          ${isSelected ? "bg-blue-50 dark:bg-blue-900/20" : "hover:bg-gray-50 dark:hover:bg-gray-800/50"}
+        `}
                     >
-                        <div
-                            {...provided.dragHandleProps}
-                            className="absolute left-2 top-1.5 opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing"
-                        >
-                            <GripVertical className="w-4 h-4 text-gray-400" />
-                        </div>
+                        <BlockMenu
+                            onDelete={() => handleBlockDelete(block.id)}
+                            dragHandleProps={provided.dragHandleProps}
+                        />
                         {getBlockContent()}
                     </div>
                 )}
