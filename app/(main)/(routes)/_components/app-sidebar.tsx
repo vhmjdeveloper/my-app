@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/sidebar";
 import { SidebarTitle } from "@/app/(main)/(routes)/_components/side-bar-title";
 import { DocumentList } from "@/app/(main)/(routes)/_components/document-list";
+import { SidebarTrash } from "@/app/(main)/(routes)/_components/sidebar-trash";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const { state, openMobile, isMobile } = useSidebar();
@@ -21,6 +22,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarHeader>
             <SidebarContent>
                 <DocumentList />
+                <SidebarTrash />
             </SidebarContent>
         </Sidebar>
     );

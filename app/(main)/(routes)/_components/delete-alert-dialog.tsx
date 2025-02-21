@@ -30,17 +30,17 @@ export default function DeleteAlertDialog({
             <AlertDialogContent>
                 <AlertDialogHeader>
                     <AlertDialogTitle>
-                        ¿Estás seguro de eliminar {isSubdocument ? "este subdocumento" : "este documento"}?
+                        ¿Mover a la papelera?
                     </AlertDialogTitle>
                     <AlertDialogDescription>
                         {isSubdocument ? (
                             <>
-                                El subdocumento <span className="font-medium">{documentTitle}</span> será eliminado permanentemente.
+                                El subdocumento <span className="font-medium">{documentTitle}</span> será movido a la papelera.
                             </>
                         ) : (
                             <>
-                                El documento <span className="font-medium">{documentTitle}</span> y todos sus subdocumentos serán eliminados permanentemente.
-                                Esta acción no se puede deshacer.
+                                El documento <span className="font-medium">{documentTitle}</span> y todos sus subdocumentos
+                                serán movidos a la papelera. Podrás restaurarlos dentro de los próximos 30 días.
                             </>
                         )}
                     </AlertDialogDescription>
@@ -51,7 +51,7 @@ export default function DeleteAlertDialog({
                         onClick={onConfirm}
                         className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
                     >
-                        Eliminar
+                        Mover a la papelera
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>

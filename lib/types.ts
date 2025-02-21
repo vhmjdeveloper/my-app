@@ -22,6 +22,8 @@ export interface Document {
     blocks: Block[];
     lastModified: string;
     created: string;
-    parentId?: string;  // ID del documento padre, si es un subdocumento
-    subdocuments?: string[];  // Lista de IDs de subdocumentos
+    parentId?: string;
+    subdocuments?: string[];
+    deletedAt?: string;    // Nueva propiedad para indicar cuándo fue eliminado
+    isDeleted?: boolean;   // Nueva propiedad para indicar si está en la papelera
 }
