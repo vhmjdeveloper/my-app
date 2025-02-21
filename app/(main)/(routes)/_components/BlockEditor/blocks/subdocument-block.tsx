@@ -15,7 +15,7 @@ interface SubdocumentBlockProps {
 export const SubdocumentBlock = React.forwardRef<HTMLDivElement, SubdocumentBlockProps>(
     ({ id, content, onKeyDown, onFocus }, ref) => {
         const router = useRouter();
-        const [isExpanded, setIsExpanded] = useState(true);
+        const [isExpanded, setIsExpanded] = useState(false);
         const [document, setDocument] = useState<Document | null>(null);
 
         useEffect(() => {

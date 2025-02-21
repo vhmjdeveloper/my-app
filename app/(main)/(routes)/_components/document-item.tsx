@@ -95,17 +95,17 @@ export const DocumentItem = ({
     const subdocuments = document.subdocuments?.map(id => documents[id]).filter(Boolean) || [];
 
     return (
-        <div className="flex flex-col">
+        <div className="flex flex-col min-w-0"> {/* Añadido min-w-0 aquí */}
             <div
                 className={cn(
-                    "group flex items-center gap-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer",
+                    "group flex items-center gap-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer min-w-0", // Añadido min-w-0
                     currentDocumentId === document.id && "bg-gray-100 dark:bg-gray-800"
                 )}
                 style={{ paddingLeft: `${level * 12 + 8}px` }}
             >
                 <button
                     onClick={handleExpandToggle}
-                    className="h-6 w-6 flex items-center justify-center"
+                    className="h-6 w-6 flex-shrink-0 flex items-center justify-center" // Añadido flex-shrink-0
                 >
                     {isExpanded ? (
                         <ChevronDown className="h-4 w-4 text-gray-500" />
@@ -114,16 +114,16 @@ export const DocumentItem = ({
                     )}
                 </button>
                 <div
-                    className="flex-1 flex items-center gap-2 p-2"
+                    className="flex-1 flex items-center gap-2 p-2 min-w-0" // Añadido min-w-0
                     onClick={handleClick}
                 >
-                    <ScrollText className="h-4 w-4 text-gray-500 dark:text-gray-400 shrink-0" />
-                    <span className="truncate">{document.title}</span>
+                    <ScrollText className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0" /> {/* Añadido flex-shrink-0 */}
+                    <span className="truncate text-sm">{document.title}</span>
                 </div>
-                <div className="group/item">
+                <div className="flex items-center gap-1 flex-shrink-0"> {/* Modificado y añadido flex-shrink-0 */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                            <button className="h-6 w-6 p-1 rounded-md opacity-0 group-hover/item:opacity-100 hover:bg-gray-200 dark:hover:bg-gray-700">
+                            <button className="h-6 w-6 p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-gray-200 dark:hover:bg-gray-700">
                                 <MoreHorizontal className="h-4 w-4 text-gray-500 dark:text-gray-400"/>
                             </button>
                         </DropdownMenuTrigger>
@@ -152,7 +152,7 @@ export const DocumentItem = ({
                     </DropdownMenu>
                     <button
                         onClick={handleCreateSubdocument}
-                        className="h-6 w-6 p-1 rounded-md opacity-0 group-hover/item:opacity-100 hover:bg-gray-200 dark:hover:bg-gray-700">
+                        className="h-6 w-6 p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-gray-200 dark:hover:bg-gray-700">
                         <Plus className="h-4 w-4 text-gray-500 dark:text-gray-400"/>
                     </button>
                 </div>
