@@ -1,19 +1,21 @@
 import { useState, useEffect, useCallback } from "react";
 
-import { loadAllDocuments, deleteDocument } from "@/lib/serializer";
+import { loadAllDocuments } from "@/lib/serializer";
 import { Document } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { useDocument } from "@/context/document-context";
 import { DocumentItem } from "./document-item";
 import { DocumentTitle } from "./document-title";
 import {deleteParentDocument, deleteSubdocument} from "@/lib/operation-utils";
+import DeleteAlertDialog from "@/app/(main)/(routes)/_components/delete-alert-dialog";
 
 export function DocumentList() {
     const [documents, setDocuments] = useState<Record<string, Document>>({});
     const [renamingDoc, setRenamingDoc] = useState<string | null>(null);
     const router = useRouter();
     const { document: currentDocument } = useDocument();
-
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [documentToDelete, setDocumentToDelete] = useState<string | null>(null);
     const loadAndSortDocuments = useCallback(() => {
         const allDocs = loadAllDocuments();
         setDocuments(allDocs);
@@ -43,33 +45,34 @@ export function DocumentList() {
 
 
     const handleDeleteDocument = (docId: string) => {
-        const documents = loadAllDocuments();
         const doc = documents[docId];
-
         if (!doc) return;
 
-        const isSubdocument = !!doc.parentId;
-        const message = isSubdocument
-            ? "¿Estás seguro de que deseas eliminar este subdocumento?"
-            : "¿Estás seguro de que deseas eliminar este documento y todos sus subdocumentos?";
-
-        if (confirm(message)) {
-            const nextDocId = isSubdocument
-                ? deleteSubdocument(docId)
-                : deleteParentDocument(docId);
-
-            if (nextDocId) {
-                router.push(`/documents/${nextDocId}`);
-            } else {
-                // Si no hay más documentos, crear uno nuevo
-                const newDocId = 'doc_' + Date.now().toString(36);
-                router.push(`/documents/${newDocId}`);
-            }
-
-            loadAndSortDocuments();
-        }
+        setDocumentToDelete(docId);
+        setDeleteDialogOpen(true);
     };
 
+    const handleDeleteConfirm = () => {
+        if (!documentToDelete) return;
+
+        const doc = documents[documentToDelete];
+        const isSubdocument = !!doc.parentId;
+
+        const nextDocId = isSubdocument
+            ? deleteSubdocument(documentToDelete)
+            : deleteParentDocument(documentToDelete);
+
+        if (nextDocId) {
+            router.push(`/documents/${nextDocId}`);
+        } else {
+            const newDocId = 'doc_' + Date.now().toString(36);
+            router.push(`/documents/${newDocId}`);
+        }
+
+        loadAndSortDocuments();
+        setDeleteDialogOpen(false);
+        setDocumentToDelete(null);
+    };
     // Filtrar documentos raíz: documentos que no tienen parentId y que no son subdocumentos de otros
     const rootDocuments = Object.values(documents)
         .filter(doc => {
@@ -112,6 +115,18 @@ export function DocumentList() {
                         if (!open) setRenamingDoc(null);
                         loadAndSortDocuments();
                     }}
+                />
+            )}
+            {documentToDelete && (
+                <DeleteAlertDialog
+                    isOpen={deleteDialogOpen}
+                    onClose={() => {
+                        setDeleteDialogOpen(false);
+                        setDocumentToDelete(null);
+                    }}
+                    onConfirm={handleDeleteConfirm}
+                    documentTitle={documents[documentToDelete]?.title || ""}
+                    isSubdocument={!!documents[documentToDelete]?.parentId}
                 />
             )}
         </div>
