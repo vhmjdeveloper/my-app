@@ -6,7 +6,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {DraggableProvided, DraggableProvidedDragHandleProps} from "@hello-pangea/dnd";
+import { DraggableProvidedDragHandleProps} from "@hello-pangea/dnd";
 
 interface BlockMenuProps {
     onDelete: () => void;
