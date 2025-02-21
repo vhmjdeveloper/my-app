@@ -4,7 +4,8 @@ import { registerAllModules } from 'handsontable/registry';
 import Handsontable from 'handsontable';
 import 'handsontable/dist/handsontable.min.css';
 import { HyperFormula } from 'hyperformula';
-
+import 'handsontable/styles/handsontable.min.css';
+import 'handsontable/styles/ht-theme-main.min.css';
 // Registrar todos los módulos y el idioma español de Handsontable
 registerAllModules();
 
@@ -35,7 +36,7 @@ interface TableData {
 }
 
 const TableBlock = React.forwardRef<HTMLDivElement, TableBlockProps>(
-    ({ id, content, onChange, onKeyDown, onFocus }, ref) => {
+    ({ content, onChange, onKeyDown, onFocus }, ref) => {
         const hotRef = useRef<Handsontable | null>(null);
 
         const defaultData: TableData = {
@@ -75,15 +76,15 @@ const TableBlock = React.forwardRef<HTMLDivElement, TableBlockProps>(
                     row_below: { name: 'Insertar fila abajo' },
                     col_left: { name: 'Insertar columna izquierda' },
                     col_right: { name: 'Insertar columna derecha' },
-                    separator1: { name: '---------' },
+                    separator1: '---------',
                     remove_row: { name: 'Eliminar fila' },
                     remove_col: { name: 'Eliminar columna' },
-                    separator2: { name: '---------' },
+                    separator2: '---------',
                     copy: { name: 'Copiar' },
                     cut: { name: 'Cortar' },
-                    separator3: { name: '---------' },
+                    separator3: '---------',
                     alignment: { name: 'Alineación' },
-                    separator4: { name: '---------' },
+                    separator4: '---------',
                     clear_formula: {
                         name: 'Limpiar fórmula',
                         callback: function(this: Handsontable) {
@@ -199,7 +200,7 @@ const TableBlock = React.forwardRef<HTMLDivElement, TableBlockProps>(
                         Tip: Usa = para comenzar una fórmula. Ejemplo: =SUM(A1:A5)
                     </span>
                 </div>
-                <div className="p-2">
+                <div className="p-2 relative" style={{ isolation: 'isolate' }}>
                     <HotTable
                         ref={(el) => {
                             if (el) {

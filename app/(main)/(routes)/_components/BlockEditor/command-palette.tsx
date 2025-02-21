@@ -145,7 +145,7 @@ export function CommandPalette({ isOpen, onClose, onSelect, position }: CommandP
   return (
       <div
           ref={containerRef}
-          className="fixed z-50 w-72 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"
+          className="fixed z-[9999] w-72 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"
           style={{ top: finalPosition.top, left: finalPosition.left }}
       >
         <Command ref={commandRef} className="w-full" shouldFilter={true}>
