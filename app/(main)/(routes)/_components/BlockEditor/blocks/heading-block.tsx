@@ -16,12 +16,14 @@ export const HeadingBlock = forwardRef<HTMLTextAreaElement, HeadingBlockProps>(
   ({ id, content, level, onChange, onKeyDown, onFocus }, ref) => {
     const textareaRef = useRef<HTMLTextAreaElement | null>(null)
 
-    useEffect(() => {
-      if (textareaRef.current) {
-        textareaRef.current.style.height = "auto"
-        textareaRef.current.style.height = textareaRef.current.scrollHeight + "px"
-      }
-    }, [textareaRef]) // Updated dependency
+      useEffect(() => {
+          if (textareaRef.current) {
+              // Reset height to allow shrinking
+              textareaRef.current.style.height = "auto"
+              // Set new height based on scrollHeight
+              textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
+          }
+      }, [content]) // Updated dependency
 
     useEffect(() => {
       if (textareaRef.current && document.activeElement !== textareaRef.current) {
