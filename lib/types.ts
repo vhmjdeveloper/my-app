@@ -14,6 +14,7 @@ export type BlockType =
     | "todo"
     | "image"
     | "code"
+    | "table"
 | "subdocument";
 
 export interface Document {

@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import {useState, useEffect, useRef} from "react"
 import { Command } from "cmdk"
-import { Type, Heading1, Heading2, Heading3, ListOrdered, List, Image, CheckSquare, Code, File } from "lucide-react"
+import { Type, Heading1, Heading2, Heading3, ListOrdered, List, Image, CheckSquare, Code, File, Table2 } from "lucide-react"
 
 interface CommandPaletteProps {
   isOpen: boolean
@@ -70,10 +70,16 @@ const BLOCK_TYPES = [
     icon: Code,
   },
   {
+    id: "table",
+    name: "Tabla",
+    description: "Insertar una tabla editable.",
+    icon: Table2,
+  },
+  {
     id: "subdocument",
     name: "Subdocumento",
     description: "Crear un nuevo subdocumento anidado.",
-    icon: File, // Importar File de lucide-react
+    icon: File,
   },
 ]
 

@@ -9,14 +9,15 @@ import { CommandPalette } from './command-palette'
 import { Block, BlockType } from '@/lib/types'
 
 import { GripVertical } from "lucide-react"
-import {HeadingBlock} from "@/app/(main)/(routes)/_components/BlockEditor/blocks/heading-block";
-import {TodoBlock} from "@/app/(main)/(routes)/_components/BlockEditor/blocks/todo-block";
-import {BulletListBlock} from "@/app/(main)/(routes)/_components/BlockEditor/blocks/bullet-list-block";
-import {ImageBlock} from "@/app/(main)/(routes)/_components/BlockEditor/blocks/image-block";
-import {CodeBlock} from "@/app/(main)/(routes)/_components/BlockEditor/blocks/code-block";
-import {NumberedListBlock} from "@/app/(main)/(routes)/_components/BlockEditor/blocks/numbered-list-block";
-import {TextBlock} from "@/app/(main)/(routes)/_components/BlockEditor/blocks/text-block";
-import {SubdocumentBlock} from "@/app/(main)/(routes)/_components/BlockEditor/blocks/subdocument-block";
+import { HeadingBlock } from "@/app/(main)/(routes)/_components/BlockEditor/blocks/heading-block";
+import { TodoBlock } from "@/app/(main)/(routes)/_components/BlockEditor/blocks/todo-block";
+import { BulletListBlock } from "@/app/(main)/(routes)/_components/BlockEditor/blocks/bullet-list-block";
+import { ImageBlock } from "@/app/(main)/(routes)/_components/BlockEditor/blocks/image-block";
+import { CodeBlock } from "@/app/(main)/(routes)/_components/BlockEditor/blocks/code-block";
+import { NumberedListBlock } from "@/app/(main)/(routes)/_components/BlockEditor/blocks/numbered-list-block";
+import { TextBlock } from "@/app/(main)/(routes)/_components/BlockEditor/blocks/text-block";
+import { SubdocumentBlock } from "@/app/(main)/(routes)/_components/BlockEditor/blocks/subdocument-block";
+import TableBlock from "@/app/(main)/(routes)/_components/BlockEditor/blocks/table-block";
 
 interface BlockEditorProps {
     initialBlocks: Block[]
@@ -67,7 +68,7 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
         blocks,
         setBlocks,
         setFocusedBlockId,
-        documentId  // Añadir el documentId aquí
+        documentId
     });
 
     useEffect(() => {
@@ -220,6 +221,8 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
                     )
                 case "subdocument":
                     return <SubdocumentBlock {...commonProps} />;
+                case "table":
+                    return <TableBlock {...commonProps} />;
                 default:
                     return <TextBlock {...commonProps} />
             }

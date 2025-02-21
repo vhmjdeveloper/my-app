@@ -1,16 +1,36 @@
 import {Block, Document} from "@/lib/types";
 
 const isClient = typeof window !== 'undefined';
+
 function isValidJSON(str: string): boolean {
     if (!str || str.trim() === '') return false;
     try {
         JSON.parse(str);
         return true;
     } catch (e) {
-        console.error("errorss",e)
+        console.error("Error validating JSON:", e);
         return false;
     }
 }
+
+function initializeBlockContent(type: string): string {
+    switch (type) {
+        case "image":
+            return JSON.stringify({
+                url: '',
+                width: 100,
+                showCaption: false
+            });
+        case "table":
+            return JSON.stringify({
+                headers: [''],
+                rows: [['']]
+            });
+        default:
+            return '';
+    }
+}
+
 export function serializeDocument(blocks: Block[]): Document {
     const titleBlock = blocks.find(block => block.type === "heading-1");
     const title = titleBlock?.content || "Sin título";
@@ -24,9 +44,10 @@ export function serializeDocument(blocks: Block[]): Document {
         created: now,
     };
 }
+
 export function serializeNewDocument(blocks: Block[]): Document {
     const titleBlock = blocks.find(block => block.type === "heading-1");
-    const title = titleBlock?.content || "Untitled";
+    const title = titleBlock?.content || "Sin título";
     const now = new Date().toISOString();
 
     return {
@@ -38,7 +59,6 @@ export function serializeNewDocument(blocks: Block[]): Document {
     };
 }
 
-// Nueva función para serializar un documento existente
 export function serializeExistingDocument(blocks: Block[], documentId: string): Document {
     const titleBlock = blocks.find(block => block.type === "heading-1");
     const title = titleBlock?.content || "Sin título";
@@ -52,19 +72,14 @@ export function serializeExistingDocument(blocks: Block[], documentId: string): 
     };
 }
 
-// Función auxiliar para procesar los bloques
 function processBlocks(blocks: Block[]): Block[] {
     return blocks.map(block => {
-        if (block.type === "image") {
+        if (block.type === "image" || block.type === "table") {
             // Si el contenido está vacío, inicializamos con un objeto JSON válido
             if (!block.content || block.content.trim() === '') {
                 return {
                     ...block,
-                    content: JSON.stringify({
-                        url: '',
-                        width: 100,
-                        showCaption: false
-                    })
+                    content: initializeBlockContent(block.type)
                 };
             }
 
@@ -72,11 +87,7 @@ function processBlocks(blocks: Block[]): Block[] {
             if (!isValidJSON(block.content)) {
                 return {
                     ...block,
-                    content: JSON.stringify({
-                        url: block.content,
-                        width: 100,
-                        showCaption: false
-                    })
+                    content: initializeBlockContent(block.type)
                 };
             }
 
@@ -86,28 +97,30 @@ function processBlocks(blocks: Block[]): Block[] {
         return block;
     });
 }
+
 export function deserializeDocument(document: Document): Block[] {
     return document.blocks.map(block => {
-        if (block.type === "image") {
+        if (block.type === "image" || block.type === "table") {
             try {
-            //    const imageData = JSON.parse(block.content);
-                // Verificar si necesitamos convertir de base64
+                // Verificar que el contenido sea JSON válido
+                JSON.parse(block.content);
                 return block;
             } catch (e) {
-                console.error(e)
-                return block;
+                console.error('Error deserializing block:', e);
+                return {
+                    ...block,
+                    content: initializeBlockContent(block.type)
+                };
             }
         }
         return block;
     });
 }
 
-// Función para generar un ID único para el documento
 function generateDocumentId(): string {
     return 'doc_' + Date.now().toString(36) + Math.random().toString(36).substr(2);
 }
 
-// Función para guardar el documento en localStorage
 export function saveDocument(document: Document): void {
     if (!isClient) return;
 
@@ -145,8 +158,6 @@ export function saveDocument(document: Document): void {
     }
 }
 
-
-// Función para cargar un documento específico
 export function loadAllDocuments(): Record<string, Document> {
     if (!isClient) return {};
 
