@@ -23,8 +23,11 @@ function initializeBlockContent(type: string): string {
             });
         case "table":
             return JSON.stringify({
-                headers: [''],
-                rows: [['']]
+                data: [['', '', ''], ['', '', ''], ['', '', '']],
+                colHeaders: true,
+                rowHeaders: true,
+                formulas: true,
+                settings: {}
             });
         default:
             return '';

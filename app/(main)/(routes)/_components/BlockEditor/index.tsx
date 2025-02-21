@@ -84,7 +84,7 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
         if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
             const textArea = e.target as HTMLTextAreaElement
             const isAtStart = textArea.selectionStart === 0
-            const isAtEnd = textArea.selectionEnd === textArea.value.length
+            const isAtEnd = textArea.selectionEnd === textArea.value?.length
 
             if ((e.key === 'ArrowUp' && isAtStart) || (e.key === 'ArrowDown' && isAtEnd)) {
                 e.preventDefault()
