@@ -3,6 +3,7 @@ import { Trash2, RefreshCw, X } from 'lucide-react';
 import { Document } from '@/lib/types';
 import { loadAllDocuments, saveDocument, deleteDocument } from '@/lib/serializer';
 import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
 import {
     Dialog,
     DialogContent,
@@ -20,9 +21,14 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import {emitDocumentChange} from "@/lib/document-events";
+import { emitDocumentChange } from "@/lib/document-events";
 
-export function TrashDialog() {
+interface TrashDialogProps {
+    children: React.ReactNode;
+}
+
+export function TrashDialog({ children }: TrashDialogProps) {
+    const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
     const [documents, setDocuments] = useState<Document[]>([]);
     const [confirmDeleteDoc, setConfirmDeleteDoc] = useState<Document | null>(null);
@@ -70,14 +76,9 @@ export function TrashDialog() {
 
     return (
         <>
-            <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsOpen(true)}
-                className="opacity-70 hover:opacity-100"
-            >
-                <Trash2 className="h-6 w-6" />
-            </Button>
+            <div onClick={() => setIsOpen(true)}>
+                {children}
+            </div>
 
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
                 <DialogContent className="sm:max-w-2xl">
@@ -104,7 +105,11 @@ export function TrashDialog() {
                                     {documents.map(doc => (
                                         <div
                                             key={doc.id}
-                                            className="flex items-center justify-between p-4 rounded-lg border"
+                                            className="flex items-center justify-between p-4 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors"
+                                            onClick={() => {
+                                                router.push(`/documents/${doc.id}`);
+                                                setIsOpen(false);
+                                            }}
                                         >
                                             <div>
                                                 <h3 className="font-medium">{doc.title}</h3>
@@ -116,7 +121,10 @@ export function TrashDialog() {
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
-                                                    onClick={() => handleRestore(doc)}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleRestore(doc);
+                                                    }}
                                                 >
                                                     <RefreshCw className="h-4 w-4 mr-2" />
                                                     Restaurar
@@ -124,7 +132,10 @@ export function TrashDialog() {
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
-                                                    onClick={() => setConfirmDeleteDoc(doc)}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setConfirmDeleteDoc(doc);
+                                                    }}
                                                     className="text-red-600 hover:text-red-700"
                                                 >
                                                     <X className="h-4 w-4 mr-2" />

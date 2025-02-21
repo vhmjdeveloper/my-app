@@ -7,7 +7,7 @@ import { DocumentItem } from "./document-item";
 import { DocumentTitle } from "./document-title";
 import { moveToTrash } from "@/lib/operation-utils";
 import DeleteAlertDialog from "@/app/(main)/(routes)/_components/delete-alert-dialog";
-import {DOCUMENT_CHANGE_EVENT} from "@/lib/document-events";
+import { DOCUMENT_CHANGE_EVENT } from "@/lib/document-events";
 
 export function DocumentList() {
     const [documents, setDocuments] = useState<Record<string, Document>>({});
@@ -26,7 +26,6 @@ export function DocumentList() {
         loadAndSortDocuments();
     }, [loadAndSortDocuments, currentDocument]);
 
-    // Actualizar cuando el documento actual cambie
     useEffect(() => {
         if (currentDocument) {
             loadAndSortDocuments();
@@ -78,13 +77,20 @@ export function DocumentList() {
         setDocumentToDelete(null);
     };
 
-    // Filtrar documentos raíz: documentos que no están eliminados ni son subdocumentos
+    // Filtrar documentos activos (no eliminados) y ordenarlos
     const rootDocuments = Object.values(documents)
         .filter(doc => {
+            // Un documento debe mostrarse en el sidebar si:
+            // 1. No está eliminado
+            // 2. No es un subdocumento de otro documento
+            // 3. No tiene padre
+            if (doc.isDeleted) return false;
+
             const isSubdocumentOfAnother = Object.values(documents).some(
                 parentDoc => parentDoc.subdocuments?.includes(doc.id)
             );
-            return !doc.parentId && !isSubdocumentOfAnother && !doc.isDeleted;
+
+            return !doc.parentId && !isSubdocumentOfAnother;
         })
         .sort((a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime());
 

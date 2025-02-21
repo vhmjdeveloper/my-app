@@ -33,14 +33,26 @@ export const DocumentItem = ({
     const [subdocumentCount, setSubdocumentCount] = useState(document.subdocuments?.length || 0);
     const hasSubdocuments = subdocumentCount > 0;
 
-    const handleClick = () => {
+    const handleClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Guardar el documento actual antes de navegar
+        if (currentDocumentId) {
+            localStorage.setItem('navigating_from', currentDocumentId);
+        }
+
         router.push(`/documents/${document.id}`);
     };
-
     const handleExpandToggle = (e: React.MouseEvent) => {
         e.stopPropagation();
         setIsExpanded(!isExpanded);
     };
+    const documentClasses = cn(
+        "group flex items-center gap-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer min-w-0",
+        currentDocumentId === document.id && "bg-gray-100 dark:bg-gray-800",
+        document.isDeleted && "opacity-50 cursor-not-allowed"
+    );
 
     useEffect(() => {
         const validSubdocuments = document.subdocuments?.filter(id => documents[id]) || [];
@@ -95,35 +107,36 @@ export const DocumentItem = ({
     const subdocuments = document.subdocuments?.map(id => documents[id]).filter(Boolean) || [];
 
     return (
-        <div className="flex flex-col min-w-0"> {/* Añadido min-w-0 aquí */}
+        <div className="flex flex-col min-w-0">
             <div
-                className={cn(
-                    "group flex items-center gap-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer min-w-0", // Añadido min-w-0
-                    currentDocumentId === document.id && "bg-gray-100 dark:bg-gray-800"
-                )}
-                style={{ paddingLeft: `${level * 12 + 8}px` }}
+                className={documentClasses}
+                style={{paddingLeft: `${level * 12 + 8}px`}}
             >
                 <button
                     onClick={handleExpandToggle}
-                    className="h-6 w-6 flex-shrink-0 flex items-center justify-center" // Añadido flex-shrink-0
+                    className="h-6 w-6 flex-shrink-0 flex items-center justify-center"
                 >
                     {isExpanded ? (
-                        <ChevronDown className="h-4 w-4 text-gray-500" />
+                        <ChevronDown className="h-4 w-4 text-gray-500"/>
                     ) : (
-                        <ChevronRight className="h-4 w-4 text-gray-500" />
+                        <ChevronRight className="h-4 w-4 text-gray-500"/>
                     )}
                 </button>
                 <div
-                    className="flex-1 flex items-center gap-2 p-2 min-w-0" // Añadido min-w-0
+                    className="flex-1 flex items-center gap-2 p-2 min-w-0"
                     onClick={handleClick}
                 >
-                    <ScrollText className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0" /> {/* Añadido flex-shrink-0 */}
-                    <span className="truncate text-sm">{document.title}</span>
+                    <ScrollText className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0"/>
+                    <span className="truncate text-sm">
+                        {document.title}
+                        {document.isDeleted && " (En papelera)"}
+                    </span>
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0"> {/* Modificado y añadido flex-shrink-0 */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                            <button className="h-6 w-6 p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-gray-200 dark:hover:bg-gray-700">
+                            <button
+                                className="h-6 w-6 p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-gray-200 dark:hover:bg-gray-700">
                                 <MoreHorizontal className="h-4 w-4 text-gray-500 dark:text-gray-400"/>
                             </button>
                         </DropdownMenuTrigger>
