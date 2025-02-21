@@ -8,6 +8,7 @@ import { DocumentTitle } from "./document-title";
 import { moveToTrash } from "@/lib/operation-utils";
 import DeleteAlertDialog from "@/app/(main)/(routes)/_components/delete-alert-dialog";
 import { DOCUMENT_CHANGE_EVENT } from "@/lib/document-events";
+import { SearchDocuments } from "./search-documents";
 
 export function DocumentList() {
     const [documents, setDocuments] = useState<Record<string, Document>>({});
@@ -27,28 +28,16 @@ export function DocumentList() {
     }, [loadAndSortDocuments, currentDocument]);
 
     useEffect(() => {
-        if (currentDocument) {
-            loadAndSortDocuments();
-        }
-    }, [currentDocument?.id, currentDocument?.lastModified, loadAndSortDocuments]);
-
-    useEffect(() => {
-        const handleStorageChange = (e: StorageEvent) => {
-            if (e.key === "documents") {
-                loadAndSortDocuments();
-            }
-        };
-
         const handleDocumentChange = () => {
             loadAndSortDocuments();
         };
 
-        window.addEventListener("storage", handleStorageChange);
         window.addEventListener(DOCUMENT_CHANGE_EVENT, handleDocumentChange);
+        window.addEventListener("storage", handleDocumentChange);
 
         return () => {
-            window.removeEventListener("storage", handleStorageChange);
             window.removeEventListener(DOCUMENT_CHANGE_EVENT, handleDocumentChange);
+            window.removeEventListener("storage", handleDocumentChange);
         };
     }, [loadAndSortDocuments]);
 
@@ -80,39 +69,43 @@ export function DocumentList() {
     // Filtrar documentos activos (no eliminados) y ordenarlos
     const rootDocuments = Object.values(documents)
         .filter(doc => {
-            // Un documento debe mostrarse en el sidebar si:
-            // 1. No está eliminado
-            // 2. No es un subdocumento de otro documento
-            // 3. No tiene padre
             if (doc.isDeleted) return false;
-
             const isSubdocumentOfAnother = Object.values(documents).some(
                 parentDoc => parentDoc.subdocuments?.includes(doc.id)
             );
-
             return !doc.parentId && !isSubdocumentOfAnother;
         })
         .sort((a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime());
 
     return (
         <div className="px-3 py-2">
-            <div className="flex items-center justify-between mb-2 px-2">
-                <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-                    DOCUMENTOS
-                </h2>
+            <div className="space-y-4">
+                <SearchDocuments
+                    documents={documents}
+                    currentDocumentId={currentDocument?.id}
+                    onDelete={handleDeleteDocument}
+                    onRename={(id) => setRenamingDoc(id)}
+                />
+
+                <div>
+                    <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-2 mb-2">
+                        DOCUMENTOS
+                    </h2>
+                    <div className="space-y-1">
+                        {rootDocuments.map((doc) => (
+                            <DocumentItem
+                                key={doc.id}
+                                document={doc}
+                                currentDocumentId={currentDocument?.id}
+                                onDelete={handleDeleteDocument}
+                                onRename={(id) => setRenamingDoc(id)}
+                                documents={documents}
+                            />
+                        ))}
+                    </div>
+                </div>
             </div>
-            <div className="space-y-1">
-                {rootDocuments.map((doc) => (
-                    <DocumentItem
-                        key={doc.id}
-                        document={doc}
-                        currentDocumentId={currentDocument?.id}
-                        onDelete={handleDeleteDocument}
-                        onRename={(id) => setRenamingDoc(id)}
-                        documents={documents}
-                    />
-                ))}
-            </div>
+
             {renamingDoc && (
                 <DocumentTitle
                     documentId={renamingDoc}
@@ -124,6 +117,7 @@ export function DocumentList() {
                     }}
                 />
             )}
+
             {documentToDelete && (
                 <DeleteAlertDialog
                     isOpen={deleteDialogOpen}
