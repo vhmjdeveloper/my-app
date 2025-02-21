@@ -111,9 +111,9 @@ const SidebarProvider = React.forwardRef<
                 : setOpen((open) => !open)
         }, [isMobile, setOpen, setOpenMobile])
 
-        const handleMouseDown = React.useCallback(() => {
-            setIsDragging(true)
-        }, [])
+        // const handleMouseDown = React.useCallback(() => {
+        //     setIsDragging(true)
+        // }, [])
 
         const handleMouseUp = React.useCallback(() => {
             setIsDragging(false)

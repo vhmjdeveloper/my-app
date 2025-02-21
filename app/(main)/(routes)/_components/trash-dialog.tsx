@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Trash2, RefreshCw, X } from 'lucide-react';
+import {  RefreshCw, X } from 'lucide-react';
 import { Document } from '@/lib/types';
 import { loadAllDocuments, saveDocument, deleteDocument } from '@/lib/serializer';
 import { Button } from '@/components/ui/button';
