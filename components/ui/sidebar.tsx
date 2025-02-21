@@ -18,6 +18,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import {useState} from "react";
 
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
@@ -76,14 +77,15 @@ const SidebarProvider = React.forwardRef<
     ) => {
         const isMobile = useIsMobile()
         const [openMobile, setOpenMobile] = React.useState(false)
-        const [width, setWidth] = React.useState(() => {
-            // Recuperar el ancho guardado o usar el valor por defecto
-            if (typeof window !== 'undefined') {
-                const saved = localStorage.getItem('sidebar_width')
-                return saved ? parseInt(saved) : DEFAULT_WIDTH
+        const [width, setWidth] = useState(() => {
+            // Solo acceder a localStorage en el cliente
+            if (typeof window === 'undefined') {
+                return DEFAULT_WIDTH; // Usar valor por defecto en servidor
             }
-            return DEFAULT_WIDTH
-        })
+
+            const saved = localStorage.getItem('sidebar_width');
+            return saved ? parseInt(saved) : DEFAULT_WIDTH;
+        });
         const [isDragging, setIsDragging] = React.useState(false)
 
         // Estado interno del sidebar
