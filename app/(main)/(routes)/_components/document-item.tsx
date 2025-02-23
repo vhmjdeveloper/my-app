@@ -126,7 +126,7 @@ export const DocumentItem = ({
                     className="flex-1 flex items-center gap-2 p-2 min-w-0"
                     onClick={handleClick}
                 >
-                    <ScrollText className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0"/>
+                    {document.icon ? <div className="h-6 w-6 text-gray-500 dark:text-gray-400 flex-shrink-0">{document.icon}</div> :<ScrollText className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0"/>}
                     <span className="truncate text-sm">
                         {document.title}
                         {document.isDeleted && " (En papelera)"}

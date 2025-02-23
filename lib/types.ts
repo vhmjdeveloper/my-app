@@ -19,6 +19,7 @@ export type BlockType =
 
 export interface Document {
     id: string;
+    icon?: string;
     title: string;
     blocks: Block[];
     lastModified: string;

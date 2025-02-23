@@ -18,6 +18,7 @@ import { TextBlock } from "@/app/(main)/(routes)/_components/BlockEditor/blocks/
 import { SubdocumentBlock } from "@/app/(main)/(routes)/_components/BlockEditor/blocks/subdocument-block";
 import TableBlock from "@/app/(main)/(routes)/_components/BlockEditor/blocks/table-block";
 import BlockMenu from "@/app/(main)/(routes)/_components/BlockEditor/block-menu";
+import PageIcon from "@/app/(main)/(routes)/_components/BlockEditor/page-icon";
 
 interface BlockEditorProps {
     initialBlocks: Block[]
@@ -233,7 +234,21 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
 
         if (isPageTitle) {
             return (
-                <div className="mb-8" key={`page-title-${block.id}`}>
+                <div className="mb-8 flex items-start gap-2" key={`page-title-${block.id}`}>
+                    <PageIcon
+                        icon={document?.icon}
+                        onChange={(icon) => {
+                            if (document) {
+                                // Guardar el documento con el nuevo icono
+                                const updatedDoc = {
+                                    ...document,
+                                    icon,
+                                    lastModified: new Date().toISOString()
+                                };
+                                updateDocument(updatedDoc);
+                            }
+                        }}
+                    />
                     {getBlockContent()}
                 </div>
             )

@@ -42,12 +42,12 @@ export function serializeDocument(blocks: Block[]): Document {
     return {
         id: generateDocumentId(),
         title,
+        icon: "",
         blocks: processBlocks(blocks),
         lastModified: now,
         created: now,
     };
 }
-
 export function serializeNewDocument(blocks: Block[]): Document {
     const titleBlock = blocks.find(block => block.type === "heading-1");
     const title = titleBlock?.content || "Sin título";
@@ -130,31 +130,25 @@ export function saveDocument(document: Document): void {
     try {
         const documents = loadAllDocuments();
 
-        // Si el documento ya existe, preservar sus subdocumentos y parentId
+        // Asegurar que estamos manteniendo todas las propiedades necesarias
         if (documents[document.id]) {
-            document.subdocuments = documents[document.id].subdocuments || document.subdocuments;
-            document.parentId = documents[document.id].parentId || document.parentId;
+            const existingDoc = documents[document.id];
+            document = {
+                ...existingDoc,
+                ...document,
+                lastModified: new Date().toISOString(),
+                subdocuments: document.subdocuments || existingDoc.subdocuments,
+                parentId: document.parentId || existingDoc.parentId,
+                icon: document.icon !== undefined ? document.icon : existingDoc.icon
+            };
         }
 
-        // Actualizar el documento
-        documents[document.id] = {
-            ...document,
-            lastModified: new Date().toISOString()
-        };
-
-        // Si este documento es un subdocumento, asegurarnos de que el padre lo mantenga en su lista
-        if (document.parentId && documents[document.parentId]) {
-            const parentDoc = documents[document.parentId];
-            if (!parentDoc.subdocuments) {
-                parentDoc.subdocuments = [];
-            }
-            if (!parentDoc.subdocuments.includes(document.id)) {
-                parentDoc.subdocuments.push(document.id);
-            }
-            documents[document.parentId] = parentDoc;
-        }
-
+        // Guardar el documento actualizado
+        documents[document.id] = document;
         localStorage.setItem('documents', JSON.stringify(documents));
+
+        // Emitir evento de cambio
+        window.dispatchEvent(new Event('storage'));
     } catch (e) {
         console.error('Error saving document:', e);
         throw new Error('Failed to save document');
