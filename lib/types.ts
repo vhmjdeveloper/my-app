@@ -28,4 +28,5 @@ export interface Document {
     subdocuments?: string[];
     deletedAt?: string;    // Nueva propiedad para indicar cuándo fue eliminado
     isDeleted?: boolean;   // Nueva propiedad para indicar si está en la papelera
+    cover?: string;
 }

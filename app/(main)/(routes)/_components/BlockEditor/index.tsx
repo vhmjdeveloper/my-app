@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react'
-import {DragDropContext, Droppable, Draggable, DropResult, DraggableProvidedDragHandleProps} from "@hello-pangea/dnd"
+import { DragDropContext, Droppable, Draggable, DropResult, DraggableProvidedDragHandleProps } from "@hello-pangea/dnd"
 import { useDocument } from "@/context/document-context"
 import { useBlockManagement } from '@/app/(main)/(routes)/_components/BlockEditor/hooks/use-block-management'
 import { useBlockOperations } from '@/app/(main)/(routes)/_components/BlockEditor/hooks/use-block-operations'
@@ -235,29 +235,29 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
 
         if (isPageTitle) {
             return (
-                <div className='flex flex-col items-start  gap-6'>
+                <>
                     <PageCover/>
-                    <PageIcon
-                        iconSize={'text-6xl'}
-                        icon={document?.icon}
-                        onChange={(icon) => {
-                            if (document) {
-                                // Guardar el documento con el nuevo icono
-                                const updatedDoc = {
-                                    ...document,
-                                    icon,
-                                    lastModified: new Date().toISOString()
-                                };
-                                updateDocument(updatedDoc);
-                            }
-                        }}
-                    />
-                    <div className="mb-8" key={`page-title-${block.id}`}>
-
-
-                        {getBlockContent()}
+                    <div className="flex flex-col items-start w-full mt-10 mb-12" >
+                        <PageIcon
+                            iconSize={'text-6xl'}
+                            icon={document?.icon}
+                            onChange={(icon) => {
+                                if (document) {
+                                    // Guardar el documento con el nuevo icono
+                                    const updatedDoc = {
+                                        ...document,
+                                        icon,
+                                        lastModified: new Date().toISOString()
+                                    };
+                                    updateDocument(updatedDoc);
+                                }
+                            }}
+                        />
+                        <div className="w-full text-center mt-4" key={`page-title-${block.id}`}>
+                            {getBlockContent()}
+                        </div>
                     </div>
-                </div>
+                </>
             )
         }
 
@@ -286,31 +286,33 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
 
     return (
         <DragDropContext onDragEnd={handleDragEnd}>
-            <div className="max-w-4xl mx-auto p-8">
-                <Droppable droppableId="blocks">
-                    {(provided) => (
-                        <div
-                            {...provided.droppableProps}
-                            ref={provided.innerRef}
-                            className="min-h-[70vh] relative space-y-1"
-                        >
-                            {blocks.map((block, index) => renderBlock(block, index))}
-                            {provided.placeholder}
+            <div className="document-container">
+                <div className="relative max-w-4xl mx-auto p-8">
+                    <Droppable droppableId="blocks">
+                        {(provided) => (
+                            <div
+                                {...provided.droppableProps}
+                                ref={provided.innerRef}
+                                className="min-h-[70vh] relative space-y-1" key="bl"
+                            >
+                                {blocks.map((block, index) => renderBlock(block, index))}
+                                {provided.placeholder}
 
-                            <EmptyBlockPlaceholder
-                                blocks={blocks}
-                                onCreateBlock={createNewBlock}
-                            />
-                        </div>
-                    )}
-                </Droppable>
+                                <EmptyBlockPlaceholder
+                                    blocks={blocks}
+                                    onCreateBlock={createNewBlock}
+                                />
+                            </div>
+                        )}
+                    </Droppable>
 
-                <CommandPalette
-                    isOpen={commandPalette.isOpen}
-                    onClose={closeCommandPalette}
-                    onSelect={handleBlockSelect}
-                    position={commandPalette.position}
-                />
+                    <CommandPalette
+                        isOpen={commandPalette.isOpen}
+                        onClose={closeCommandPalette}
+                        onSelect={handleBlockSelect}
+                        position={commandPalette.position}
+                    />
+                </div>
             </div>
         </DragDropContext>
     )
