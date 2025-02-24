@@ -19,6 +19,7 @@ import { SubdocumentBlock } from "@/app/(main)/(routes)/_components/BlockEditor/
 import TableBlock from "@/app/(main)/(routes)/_components/BlockEditor/blocks/table-block";
 import BlockMenu from "@/app/(main)/(routes)/_components/BlockEditor/block-menu";
 import PageIcon from "@/app/(main)/(routes)/_components/BlockEditor/page-icon";
+import PageCover from "@/app/(main)/(routes)/_components/BlockEditor/page-cover";
 
 interface BlockEditorProps {
     initialBlocks: Block[]
@@ -234,7 +235,8 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
 
         if (isPageTitle) {
             return (
-                <div className="mb-8 flex flex-col items-start  gap-9" key={`page-title-${block.id}`}>
+                <div className='flex flex-col items-start  gap-6'>
+                    <PageCover/>
                     <PageIcon
                         iconSize={'text-6xl'}
                         icon={document?.icon}
@@ -250,7 +252,11 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
                             }
                         }}
                     />
-                    {getBlockContent()}
+                    <div className="mb-8" key={`page-title-${block.id}`}>
+
+
+                        {getBlockContent()}
+                    </div>
                 </div>
             )
         }
