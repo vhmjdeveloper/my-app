@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollText } from "lucide-react";
 import { useDocument } from "@/context/document-context";
 import { loadDocument, saveDocument } from "@/lib/serializer";
+import PageIcon from "@/app/(main)/(routes)/_components/BlockEditor/page-icon";
 
 interface DocumentTitleProps {
     documentId?: string;
@@ -107,8 +108,24 @@ export function DocumentTitle({
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-                <div className="flex items-center gap-2 p-2">
-                    <ScrollText className="h-4 w-4 text-gray-500" />
+                <div className="flex items-center gap-2 p-1">
+                    <PageIcon
+                        iconSize={'text-2xl'}
+                        isHover={false}
+                        defaultIcon={ScrollText}
+                        icon={document?.icon}
+                        onChange={(icon) => {
+                            if (document) {
+                                // Guardar el documento con el nuevo icono
+                                const updatedDoc = {
+                                    ...document,
+                                    icon,
+                                    lastModified: new Date().toISOString()
+                                };
+                                updateDocument(updatedDoc);
+                            }
+                        }}
+                    />
                     <Input
                         type="text"
                         value={inputValue}

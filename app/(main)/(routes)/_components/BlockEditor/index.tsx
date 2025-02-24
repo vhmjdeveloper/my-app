@@ -234,8 +234,9 @@ export function BlockEditor({ initialBlocks, documentId }: BlockEditorProps) {
 
         if (isPageTitle) {
             return (
-                <div className="mb-8 flex items-start gap-2" key={`page-title-${block.id}`}>
+                <div className="mb-8 flex flex-col items-start  gap-9" key={`page-title-${block.id}`}>
                     <PageIcon
+                        iconSize={'text-6xl'}
                         icon={document?.icon}
                         onChange={(icon) => {
                             if (document) {

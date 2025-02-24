@@ -16,7 +16,7 @@ export function Navbar() {
             {(state === 'collapsed' || isMobile) && (
                 <SidebarTrigger variant="navbar"/>
             )}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center ">
                 {currentDocument?.icon ? <div className="h-6 w-6 text-gray-500 dark:text-gray-400 flex-shrink-0">{currentDocument.icon}</div> :<ScrollText className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0"/>}
                 <DocumentTitle/>
             </div>

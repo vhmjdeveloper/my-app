@@ -1,7 +1,7 @@
 import React from 'react';
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
-import { Smile, X } from 'lucide-react';
+import {LucideIcon, Smile, X} from 'lucide-react';
 import { useTheme } from 'next-themes';
 import {
     DropdownMenu,
@@ -15,9 +15,12 @@ import { Button } from "@/components/ui/button";
 interface PageIconProps {
     icon?: string;
     onChange: (icon: string) => void;
+    defaultIcon?: LucideIcon;
+    isHover?: boolean
+    iconSize?: string
 }
 
-const PageIcon = ({ icon, onChange }: PageIconProps) => {
+const PageIcon = ({ icon, onChange, defaultIcon: DefaultIcon = Smile, isHover = true, iconSize = "text-2xl" }: PageIconProps) => {
     const { theme } = useTheme();
 
     const handleRemoveIcon = (e: React.MouseEvent) => {
@@ -41,16 +44,16 @@ const PageIcon = ({ icon, onChange }: PageIconProps) => {
                 <DropdownMenuTrigger asChild>
                     <Button
                         variant="ghost"
-                        className={`h-12 w-12 p-0 flex items-center justify-center rounded-lg 
+                        className={`h-8 w-8 p-0 flex items-center justify-center rounded-lg 
                             hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors 
-                            ${!icon && 'opacity-0 group-hover/icon:opacity-100'}
+                            ${!icon && isHover && 'opacity-0 group-hover/icon:opacity-100'}
                             dark:text-gray-100`}
                         aria-label="Seleccionar emoji"
                     >
                         {icon ? (
-                            <span className="text-4xl select-none">{icon}</span>
+                            <span className={`${iconSize} select-none`}>{icon}</span>
                         ) : (
-                            <Smile
+                            <DefaultIcon
                                 className="h-6 w-6 text-gray-500 group-hover:text-gray-900
                                     dark:text-gray-400 dark:group-hover:text-gray-100
                                     transition-colors"
